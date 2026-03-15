@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 
 import { FriendItem } from '@/components/friend-item';
 import { SearchBar } from '@/components/search-bar';
 import { ThemedText } from '@/components/themed-text';
 import { Colors, Spacing } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { getFriends, removeFriends, addFriend, seedMockData } from '@/services/database';
+import { getFriends, saveFriends, removeFriends } from '@/services/database';
+import { apiFetchFriends, apiRemoveFriend } from '@/services/api';
 import type { Friend } from '@basemsg/shared';
 
 export default function FriendsScreen() {
@@ -17,19 +20,45 @@ export default function FriendsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const router = useRouter();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme];
   const insets = useSafeAreaInsets();
 
   const loadFriends = useCallback(async () => {
-    await seedMockData();
-    const data = await getFriends();
-    setFriends(data);
+    try {
+      // Sync from backend
+      const serverFriends = await apiFetchFriends();
+      // Backend returns User[] from getFriends, map to Friend type
+      const mapped: Friend[] = (serverFriends as unknown as Array<{
+        id: string;
+        name: string;
+        phone: string;
+        avatarUrl?: string;
+        createdAt: string;
+      }>).map((u) => ({
+        id: u.id,
+        userId: u.id,
+        name: u.name,
+        phone: u.phone,
+        avatarUrl: u.avatarUrl,
+        addedAt: u.createdAt,
+      }));
+      await saveFriends(mapped);
+      setFriends(mapped);
+    } catch {
+      // Fallback to local
+      const data = await getFriends();
+      setFriends(data);
+    }
   }, []);
 
-  useEffect(() => {
-    loadFriends();
-  }, [loadFriends]);
+  // Reload when tab gets focus (e.g., after adding friends)
+  useFocusEffect(
+    useCallback(() => {
+      loadFriends();
+    }, [loadFriends])
+  );
 
   useEffect(() => {
     if (searchQuery) {
@@ -69,6 +98,13 @@ export default function FriendsScreen() {
           text: '삭제',
           style: 'destructive',
           onPress: async () => {
+            // Delete from backend
+            const deletePromises = Array.from(selectedIds).map((id) =>
+              apiRemoveFriend(id).catch(() => {})
+            );
+            await Promise.all(deletePromises);
+
+            // Delete locally
             await removeFriends(Array.from(selectedIds));
             setSelectedIds(new Set());
             setSelectionMode(false);
@@ -79,18 +115,8 @@ export default function FriendsScreen() {
     );
   };
 
-  const handleAddFromContacts = async () => {
-    // Placeholder: In production, use expo-contacts to pick from phone contacts
-    const newFriend: Friend = {
-      id: `friend-${Date.now()}`,
-      userId: `user-${Date.now()}`,
-      name: '새 친구',
-      phone: '010-0000-0000',
-      addedAt: new Date().toISOString(),
-    };
-    await addFriend(newFriend);
-    await loadFriends();
-    Alert.alert('친구 추가', '새 친구가 추가되었습니다.');
+  const handleAddFromContacts = () => {
+    router.push('/add-friend');
   };
 
   const cancelSelection = () => {

@@ -19,6 +19,14 @@ export class FriendsController {
     return this.friendsService.getFriends(userId);
   }
 
+  @Post('by-phones')
+  addFriendsByPhones(
+    @Query('userId') userId: string,
+    @Body() body: { phones: string[] },
+  ) {
+    return this.friendsService.addFriendsByPhones(userId, body.phones);
+  }
+
   @Delete(':friendId')
   removeFriend(
     @Query('userId') userId: string,

@@ -2,11 +2,11 @@ import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
 import { MessagesService } from './messages.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 
-@Controller('chat-rooms/:roomId/messages')
+@Controller()
 export class MessagesController {
   constructor(private readonly messagesService: MessagesService) {}
 
-  @Post()
+  @Post('chat-rooms/:roomId/messages')
   create(
     @Param('roomId') roomId: string,
     @Query('userId') userId: string,
@@ -15,7 +15,7 @@ export class MessagesController {
     return this.messagesService.create(roomId, userId, dto);
   }
 
-  @Get()
+  @Get('chat-rooms/:roomId/messages')
   findByRoom(
     @Param('roomId') roomId: string,
     @Query('limit') limit?: string,
@@ -25,6 +25,19 @@ export class MessagesController {
       roomId,
       limit ? parseInt(limit, 10) : 100,
       before,
+    );
+  }
+
+  @Get('messages/search')
+  searchMessages(
+    @Query('userId') userId: string,
+    @Query('q') query: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.messagesService.searchMessages(
+      userId,
+      query,
+      limit ? parseInt(limit, 10) : 50,
     );
   }
 }

@@ -52,6 +52,36 @@ export class FriendsService {
     }
   }
 
+  async addFriendsByPhones(
+    userId: string,
+    phones: string[],
+  ): Promise<{ added: User[]; notFound: string[] }> {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException(`User ${userId} not found`);
+
+    const added: User[] = [];
+    const notFound: string[] = [];
+
+    for (const phone of phones) {
+      const friendUser = await this.userRepo.findOne({ where: { phone } });
+      if (!friendUser) {
+        notFound.push(phone);
+        continue;
+      }
+      if (friendUser.id === userId) continue;
+
+      const existing = await this.friendRepo.findOne({
+        where: { user: { id: userId }, friend: { id: friendUser.id } },
+      });
+      if (existing) continue;
+
+      await this.friendRepo.save({ user, friend: friendUser });
+      added.push(friendUser);
+    }
+
+    return { added, notFound };
+  }
+
   async getFriends(userId: string): Promise<User[]> {
     const friends = await this.friendRepo.find({
       where: { user: { id: userId } },

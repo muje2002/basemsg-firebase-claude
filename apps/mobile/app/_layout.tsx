@@ -1,27 +1,44 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Colors } from '@/constants/theme';
+import { getCurrentUser } from '@/services/database';
+import { setCurrentUserId } from '@/services/api';
+import { connectSocket } from '@/services/socket';
 
 export const unstable_settings = {
   anchor: '(tabs)',
 };
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme];
+  const colors = Colors.light;
+  const [isReady, setIsReady] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const router = useRouter();
 
-  const navTheme = colorScheme === 'dark' ? {
-    ...DarkTheme,
-    colors: {
-      ...DarkTheme.colors,
-      primary: colors.primary,
-      background: colors.background,
-    },
-  } : {
+  useEffect(() => {
+    (async () => {
+      const user = await getCurrentUser();
+      if (user) {
+        setCurrentUserId(user.id);
+        connectSocket(user.id);
+        setIsLoggedIn(true);
+      }
+      setIsReady(true);
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (!isReady) return;
+    if (!isLoggedIn) {
+      router.replace('/login');
+    }
+  }, [isReady, isLoggedIn, router]);
+
+  const navTheme = {
     ...DefaultTheme,
     colors: {
       ...DefaultTheme.colors,
@@ -33,6 +50,7 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={navTheme}>
       <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="login" options={{ animation: 'none' }} />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen
           name="chat/[id]"
@@ -47,9 +65,16 @@ export default function RootLayout() {
             animation: 'slide_from_bottom',
           }}
         />
+        <Stack.Screen
+          name="add-friend"
+          options={{
+            presentation: 'modal',
+            animation: 'slide_from_bottom',
+          }}
+        />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
       </Stack>
-      <StatusBar style="auto" />
+      <StatusBar style="dark" />
     </ThemeProvider>
   );
 }

@@ -16,12 +16,14 @@ import { ThemedText } from '@/components/themed-text';
 import { Colors, Spacing } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { getFriends, saveChatRoom } from '@/services/database';
+import { apiCreateChatRoom } from '@/services/api';
 import type { Friend, ChatRoom } from '@basemsg/shared';
 
 export default function NewChatScreen() {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [roomName, setRoomName] = useState('');
+  const [creating, setCreating] = useState(false);
   const router = useRouter();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme];
@@ -54,21 +56,36 @@ export default function NewChatScreen() {
       return;
     }
 
-    const selectedFriends = friends.filter((f) => selectedIds.has(f.id));
-    const name =
-      roomName.trim() ||
-      selectedFriends.map((f) => f.name).join(', ');
+    setCreating(true);
+    try {
+      const selectedFriends = friends.filter((f) => selectedIds.has(f.id));
+      const name =
+        roomName.trim() ||
+        selectedFriends.map((f) => f.name).join(', ');
 
-    const newRoom: ChatRoom = {
-      id: `room-${Date.now()}`,
-      name,
-      participants: ['user-1', ...selectedFriends.map((f) => f.userId)],
-      unreadCount: 0,
-      createdAt: new Date().toISOString(),
-    };
+      // Use userId (same as friend id in our mapping)
+      const participantIds = selectedFriends.map((f) => f.userId);
 
-    await saveChatRoom(newRoom);
-    router.replace(`/chat/${newRoom.id}`);
+      // Create via backend API
+      const apiRoom = await apiCreateChatRoom(name, participantIds);
+
+      // Save locally for immediate display
+      const localRoom: ChatRoom = {
+        id: apiRoom.id,
+        name: apiRoom.name,
+        participants: apiRoom.participants.map((p) => p.user.id),
+        unreadCount: 0,
+        createdAt: apiRoom.createdAt,
+      };
+      await saveChatRoom(localRoom);
+
+      router.replace(`/chat/${apiRoom.id}`);
+    } catch (err) {
+      console.error('[NewChat]', err);
+      Alert.alert('오류', '채팅방 생성에 실패했습니다. 서버 연결을 확인해주세요.');
+    } finally {
+      setCreating(false);
+    }
   };
 
   return (
@@ -79,14 +96,14 @@ export default function NewChatScreen() {
           <MaterialIcons name="close" size={24} color={colors.text} />
         </TouchableOpacity>
         <ThemedText style={styles.headerTitle}>새 채팅</ThemedText>
-        <TouchableOpacity onPress={handleCreate}>
+        <TouchableOpacity onPress={handleCreate} disabled={creating}>
           <ThemedText
             style={[
               styles.createButton,
               { color: selectedIds.size > 0 ? colors.primary : colors.textSecondary },
             ]}
           >
-            만들기
+            {creating ? '생성 중...' : '만들기'}
           </ThemedText>
         </TouchableOpacity>
       </View>

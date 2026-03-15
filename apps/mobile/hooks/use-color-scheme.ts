@@ -1,6 +1,7 @@
-import { useColorScheme as useRNColorScheme } from 'react-native';
-
+/**
+ * Always returns 'light' to enforce pastel-toned UI as per design spec.
+ * The app uses bright pastel colors throughout all components.
+ */
 export function useColorScheme(): 'light' | 'dark' {
-  const scheme = useRNColorScheme();
-  return scheme === 'dark' ? 'dark' : 'light';
+  return 'light';
 }

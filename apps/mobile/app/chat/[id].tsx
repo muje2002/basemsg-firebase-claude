@@ -22,8 +22,8 @@ import { ThemedText } from '@/components/themed-text';
 import { Colors, BorderRadius, Spacing } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { getMessages, saveMessage, getChatRooms } from '@/services/database';
+import { apiFetchMessages, getCurrentUserId } from '@/services/api';
 import { joinRoom, leaveRoom, onNewMessage, sendMessage as socketSend } from '@/services/socket';
-import { getCurrentUserId } from '@/services/api';
 import type { Message } from '@basemsg/shared';
 
 export default function ChatRoomScreen() {
@@ -47,12 +47,37 @@ export default function ChatRoomScreen() {
 
   const loadMessages = useCallback(async () => {
     if (!id) return;
-    const data = await getMessages(id);
-    setMessages(data);
 
+    // Load room name from local
     const rooms = await getChatRooms();
     const room = rooms.find((r) => r.id === id);
     if (room) setRoomName(room.name);
+
+    // Try to fetch from backend first
+    try {
+      const serverMsgs = await apiFetchMessages(id);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mapped: Message[] = serverMsgs.map((m: any) => ({
+        id: m.id,
+        chatRoomId: m.chatRoomId ?? id,
+        senderId: m.senderId ?? m.sender?.id ?? '',
+        text: m.text,
+        type: m.type ?? 'text',
+        fileUri: m.fileUri,
+        fileName: m.fileName,
+        createdAt: typeof m.createdAt === 'string' ? m.createdAt : new Date(m.createdAt).toISOString(),
+      }));
+      setMessages(mapped);
+
+      // Cache locally
+      for (const msg of mapped) {
+        await saveMessage(msg);
+      }
+    } catch {
+      // Fallback to local messages
+      const data = await getMessages(id);
+      setMessages(data);
+    }
   }, [id]);
 
   useEffect(() => {
@@ -175,7 +200,7 @@ export default function ChatRoomScreen() {
       id: `msg-${Date.now()}`,
       chatRoomId: id,
       senderId: currentUserId,
-      text: type === 'image' ? '📷 사진' : type === 'video' ? '🎬 동영상' : `📎 ${name}`,
+      text: type === 'image' ? '사진' : type === 'video' ? '동영상' : name,
       type,
       fileUri: uri,
       fileName: name,

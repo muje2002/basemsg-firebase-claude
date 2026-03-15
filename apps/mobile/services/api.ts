@@ -76,6 +76,15 @@ export async function apiRemoveFriend(friendId: string): Promise<void> {
   return request(withUserId(`/friends/${friendId}`), { method: 'DELETE' });
 }
 
+export async function apiAddFriendsByPhones(
+  phones: string[],
+): Promise<{ added: Array<{ id: string; name: string; phone: string }>; notFound: string[] }> {
+  return request(withUserId('/friends/by-phones'), {
+    method: 'POST',
+    body: JSON.stringify({ phones }),
+  });
+}
+
 // ── Chat Rooms ──
 
 export interface ApiChatRoom {
@@ -128,4 +137,36 @@ export async function apiSendMessage(
     method: 'POST',
     body: JSON.stringify(data),
   });
+}
+
+// ── Message Search ──
+
+export interface MessageSearchResult {
+  chatRoomId: string;
+  chatRoomName: string;
+  messages: Message[];
+}
+
+export async function apiSearchMessages(
+  query: string,
+  limit = 50,
+): Promise<MessageSearchResult[]> {
+  return request(withUserId(`/messages/search?q=${encodeURIComponent(query)}&limit=${limit}`));
+}
+
+// ── User Registration / Login ──
+
+export async function apiRegisterOrLogin(name: string, phone: string): Promise<User> {
+  try {
+    const user = await createUser({ name, phone });
+    return user;
+  } catch (err: unknown) {
+    if (err instanceof Error && err.message.includes('409')) {
+      // Already registered, find by listing users and matching phone
+      const users = await getAllUsers();
+      const existing = users.find((u) => u.phone === phone);
+      if (existing) return existing;
+    }
+    throw err;
+  }
 }
