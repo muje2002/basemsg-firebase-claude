@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  ActionSheetIOS,
+  Alert,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -11,26 +13,37 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 
 import { MessageBubble } from '@/components/message-bubble';
+import { EmojiPicker } from '@/components/emoji-picker';
 import { ThemedText } from '@/components/themed-text';
 import { Colors, BorderRadius, Spacing } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { getMessages, saveMessage, getChatRooms } from '@/services/database';
+import { joinRoom, leaveRoom, onNewMessage, sendMessage as socketSend } from '@/services/socket';
+import { getCurrentUserId } from '@/services/api';
 import type { Message } from '@basemsg/shared';
-
-const CURRENT_USER_ID = 'user-1';
 
 export default function ChatRoomScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [roomName, setRoomName] = useState('');
+  const [showEmoji, setShowEmoji] = useState(false);
   const flatListRef = useRef<FlatList>(null);
   const router = useRouter();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme];
   const insets = useSafeAreaInsets();
+
+  let currentUserId: string;
+  try {
+    currentUserId = getCurrentUserId();
+  } catch {
+    currentUserId = 'user-1';
+  }
 
   const loadMessages = useCallback(async () => {
     if (!id) return;
@@ -46,6 +59,28 @@ export default function ChatRoomScreen() {
     loadMessages();
   }, [loadMessages]);
 
+  // Socket.io: join room and listen for messages
+  useEffect(() => {
+    if (!id) return;
+    joinRoom(id);
+
+    const unsubscribe = onNewMessage((message: Message) => {
+      if (message.chatRoomId === id) {
+        setMessages((prev) => {
+          // Avoid duplicates
+          if (prev.some((m) => m.id === message.id)) return prev;
+          return [...prev, message];
+        });
+        setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+      }
+    });
+
+    return () => {
+      leaveRoom(id);
+      unsubscribe();
+    };
+  }, [id]);
+
   const handleSend = async () => {
     const text = inputText.trim();
     if (!text || !id) return;
@@ -53,23 +88,103 @@ export default function ChatRoomScreen() {
     const newMessage: Message = {
       id: `msg-${Date.now()}`,
       chatRoomId: id,
-      senderId: CURRENT_USER_ID,
+      senderId: currentUserId,
       text,
       type: 'text',
       createdAt: new Date().toISOString(),
     };
 
     setInputText('');
+    setShowEmoji(false);
     setMessages((prev) => [...prev, newMessage]);
     await saveMessage(newMessage);
 
-    setTimeout(() => {
-      flatListRef.current?.scrollToEnd({ animated: true });
-    }, 100);
+    // Send via socket for real-time broadcast
+    socketSend(newMessage);
+
+    setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+  };
+
+  const handleEmojiSelect = (emoji: string) => {
+    setInputText((prev) => prev + emoji);
   };
 
   const handleAttachment = () => {
-    // Placeholder for file/image/video picker
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['취소', '사진 선택', '카메라', '파일 선택'],
+          cancelButtonIndex: 0,
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 1) pickImage();
+          else if (buttonIndex === 2) takePhoto();
+          else if (buttonIndex === 3) pickFile();
+        },
+      );
+    } else {
+      Alert.alert('첨부', '파일을 선택하세요', [
+        { text: '취소', style: 'cancel' },
+        { text: '사진 선택', onPress: pickImage },
+        { text: '카메라', onPress: takePhoto },
+        { text: '파일 선택', onPress: pickFile },
+      ]);
+    }
+  };
+
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images', 'videos'],
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets[0]) {
+      const asset = result.assets[0];
+      const type = asset.type === 'video' ? 'video' : 'image';
+      await sendAttachment(type, asset.uri, asset.fileName ?? `${type}_${Date.now()}`);
+    }
+  };
+
+  const takePhoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('권한 필요', '카메라 사용 권한이 필요합니다.');
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({ quality: 0.8 });
+    if (!result.canceled && result.assets[0]) {
+      const asset = result.assets[0];
+      await sendAttachment('image', asset.uri, `photo_${Date.now()}.jpg`);
+    }
+  };
+
+  const pickFile = async () => {
+    const result = await DocumentPicker.getDocumentAsync({ type: '*/*' });
+    if (!result.canceled && result.assets[0]) {
+      const asset = result.assets[0];
+      await sendAttachment('file', asset.uri, asset.name);
+    }
+  };
+
+  const sendAttachment = async (
+    type: 'image' | 'video' | 'file',
+    uri: string,
+    name: string,
+  ) => {
+    if (!id) return;
+    const msg: Message = {
+      id: `msg-${Date.now()}`,
+      chatRoomId: id,
+      senderId: currentUserId,
+      text: type === 'image' ? '📷 사진' : type === 'video' ? '🎬 동영상' : `📎 ${name}`,
+      type,
+      fileUri: uri,
+      fileName: name,
+      createdAt: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, msg]);
+    await saveMessage(msg);
+    socketSend(msg);
+    setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
   };
 
   return (
@@ -102,7 +217,7 @@ export default function ChatRoomScreen() {
         data={messages}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <MessageBubble message={item} isOwn={item.senderId === CURRENT_USER_ID} />
+          <MessageBubble message={item} isOwn={item.senderId === currentUserId} />
         )}
         contentContainerStyle={styles.messageList}
         onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
@@ -115,10 +230,18 @@ export default function ChatRoomScreen() {
         }
       />
 
+      {/* Emoji Picker */}
+      {showEmoji && (
+        <EmojiPicker onSelect={handleEmojiSelect} onClose={() => setShowEmoji(false)} />
+      )}
+
       {/* Input */}
       <View style={[styles.inputContainer, { backgroundColor: colors.background, borderTopColor: colors.border, paddingBottom: insets.bottom || Spacing.sm }]}>
         <TouchableOpacity onPress={handleAttachment} style={styles.attachButton}>
           <MaterialIcons name="add-circle-outline" size={26} color={colors.primary} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => setShowEmoji(!showEmoji)} style={styles.emojiButton}>
+          <MaterialIcons name="emoji-emotions" size={24} color={showEmoji ? colors.primary : colors.icon} />
         </TouchableOpacity>
         <View style={[styles.inputWrapper, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}>
           <TextInput
@@ -129,6 +252,7 @@ export default function ChatRoomScreen() {
             placeholderTextColor={colors.textSecondary}
             multiline
             maxLength={5000}
+            onFocus={() => setShowEmoji(false)}
           />
         </View>
         <TouchableOpacity
@@ -190,7 +314,11 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
   },
   attachButton: {
-    padding: Spacing.sm,
+    padding: Spacing.xs,
+    justifyContent: 'center',
+  },
+  emojiButton: {
+    padding: Spacing.xs,
     justifyContent: 'center',
   },
   inputWrapper: {

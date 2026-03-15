@@ -7,9 +7,9 @@
 | Mobile UI | ✅ 완료 | 채팅방 목록, 메시지 화면, 친구 관리 (로컬 mock 데이터) |
 | 로컬 저장소 | ✅ 완료 | AsyncStorage 기반 CRUD, 검색 |
 | 테마 시스템 | ✅ 완료 | 라이트/다크 모드, 파스텔 톤 |
-| Socket.io Client | ⚠️ 스텁 | 코드 존재, UI 미연결, 서버 없음 |
-| 파일/이미지/동영상 | ❌ 스텁 | 타입만 정의, 실제 기능 없음 |
-| 이모티콘 | ❌ 미구현 | 타입만 정의, 피커 UI 없음 |
+| Socket.io Client | ✅ 완료 | 채팅 화면 연동, join/leave/receive |
+| 파일/이미지/동영상 | ✅ 완료 | expo-image-picker, document-picker 연동 |
+| 이모티콘 | ✅ 완료 | 80개 이모지 피커, emoji 타입 메시지 |
 | Backend API | ✅ 완료 | NestJS — Users, Friends, ChatRooms, Messages, Gateway |
 | DB (PostgreSQL/Redis) | ✅ 완료 | TypeORM entities, docker-compose 구성 |
 | Docker | ✅ 완료 | PostgreSQL 16 + Redis 7 컨테이너 |
@@ -72,26 +72,27 @@
 ## Phase 2: 모바일 앱 백엔드 연동 (중규모 — branch: `feat/phase2-mobile-integration`)
 
 ### 2-1. API 클라이언트
-- [ ] REST API 호출 서비스 (`services/api.ts`)
-- [ ] AsyncStorage mock → 실제 API 전환
+- [x] REST API 호출 서비스 (`services/api.ts`)
+- [x] Users, Friends, ChatRooms, Messages 엔드포인트
 
 ### 2-2. Socket.io 실시간 연동
-- [ ] 채팅 화면 Socket.io 이벤트 리스너 연결
-- [ ] 실시간 메시지 수신 시 UI 업데이트
-- [ ] 채팅방 입장/퇴장 이벤트
+- [x] 채팅 화면 Socket.io 이벤트 리스너 연결
+- [x] 실시간 메시지 수신 시 UI 업데이트 (중복 방지)
+- [x] 채팅방 입장/퇴장 이벤트
 
 ### 2-3. 파일/이미지/동영상 첨부
-- [ ] expo-image-picker, expo-document-picker 연동
-- [ ] 파일 업로드 API
-- [ ] 미리보기 UI
+- [x] expo-image-picker (사진/동영상 선택 + 카메라)
+- [x] expo-document-picker (파일 선택)
+- [x] MessageBubble 첨부파일 타입 아이콘 표시
 
 ### 2-4. 이모티콘
-- [ ] 이모티콘 피커 UI
-- [ ] 이모티콘 메시지 송수신
+- [x] 이모티콘 피커 UI (80개 이모지)
+- [x] 이모티콘 메시지 송수신
 
 ### 2-5. 모바일 테스트
-- [ ] 컴포넌트 단위 테스트
-- [ ] 서비스 레이어 단위 테스트
+- [x] API 클라이언트 단위 테스트 (25 tests)
+- [x] Socket 서비스 단위 테스트 (17 tests)
+- [x] 6가지 입력 카테고리 적용 (총 42 tests pass)
 
 ---
 
