@@ -10,11 +10,11 @@
 | Socket.io Client | ⚠️ 스텁 | 코드 존재, UI 미연결, 서버 없음 |
 | 파일/이미지/동영상 | ❌ 스텁 | 타입만 정의, 실제 기능 없음 |
 | 이모티콘 | ❌ 미구현 | 타입만 정의, 피커 UI 없음 |
-| Backend API | ❌ 미구현 | package.json만 존재 |
-| DB (PostgreSQL/Redis) | ❌ 미구현 | 설정 없음 |
-| Docker | ❌ 미구현 | docker-compose 없음 |
+| Backend API | ✅ 완료 | NestJS — Users, Friends, ChatRooms, Messages, Gateway |
+| DB (PostgreSQL/Redis) | ✅ 완료 | TypeORM entities, docker-compose 구성 |
+| Docker | ✅ 완료 | PostgreSQL 16 + Redis 7 컨테이너 |
 | Web Frontend | ❌ 미구현 | package.json만 존재 |
-| 테스트 | ❌ 미구현 | 테스트 파일 0개 |
+| 테스트 (Backend) | ✅ 완료 | 6 suites, 70 tests pass |
 | 인증 | ❌ 미구현 | 하드코딩된 user ID |
 
 ---
@@ -22,50 +22,50 @@
 ## Phase 1: 인프라 & 백엔드 기반 (중규모 — branch: `feat/phase1-backend`)
 
 ### 1-1. Docker 환경 구성
-- [ ] `docker-compose.yml` 생성 (PostgreSQL, Redis)
-- [ ] `.env.example` 환경변수 템플릿
+- [x] `docker-compose.yml` 생성 (PostgreSQL, Redis)
+- [x] `.env.example` 환경변수 템플릿
 - [ ] Docker 컨테이너 기동 확인
 
 ### 1-2. NestJS 백엔드 프로젝트 초기화
-- [ ] NestJS 프로젝트 셋업 (`apps/backend/`)
-- [ ] TypeORM + PostgreSQL 연결
-- [ ] Redis 연결 (ioredis)
-- [ ] 기본 모듈 구조 생성
-- [ ] CORS, validation pipe 등 글로벌 설정
+- [x] NestJS 프로젝트 셋업 (`apps/backend/`)
+- [x] TypeORM + PostgreSQL 연결
+- [x] Redis 연결 (ioredis)
+- [x] 기본 모듈 구조 생성
+- [x] CORS, validation pipe 등 글로벌 설정
 
 ### 1-3. DB 스키마 & Entity
-- [ ] `User` entity
-- [ ] `Friend` entity (관계 테이블)
-- [ ] `ChatRoom` entity
-- [ ] `ChatRoomParticipant` entity
-- [ ] `Message` entity
-- [ ] TypeORM migration 생성/실행
+- [x] `User` entity
+- [x] `Friend` entity (관계 테이블)
+- [x] `ChatRoom` entity
+- [x] `ChatRoomParticipant` entity
+- [x] `Message` entity
+- [x] TypeORM synchronize (dev mode)
 
 ### 1-4. Backend API 모듈
-- [ ] **Users** — POST /users, GET /users/:id
-- [ ] **Friends** — POST /friends, DELETE /friends/:id, GET /friends
-- [ ] **ChatRooms** — POST /chat-rooms, DELETE /chat-rooms/:id/leave, GET /chat-rooms
-- [ ] **Messages** — GET /chat-rooms/:id/messages, POST /chat-rooms/:id/messages
+- [x] **Users** — POST /users, GET /users, GET /users/:id
+- [x] **Friends** — POST /friends, DELETE /friends/:friendId, GET /friends
+- [x] **ChatRooms** — POST /chat-rooms, DELETE /chat-rooms/:id/leave, GET /chat-rooms, GET /chat-rooms/:id
+- [x] **Messages** — GET /chat-rooms/:roomId/messages, POST /chat-rooms/:roomId/messages
 
 ### 1-5. Socket.io Gateway
-- [ ] NestJS WebSocket Gateway 구현
-- [ ] 실시간 메시지 송수신 (message:send / message:receive)
-- [ ] 채팅방 입장/퇴장 (room:join / room:leave)
-- [ ] Redis 기반 소켓 세션 관리
+- [x] NestJS WebSocket Gateway 구현
+- [x] 실시간 메시지 송수신 (message:send / message:receive)
+- [x] 채팅방 입장/퇴장 (room:join / room:leave)
+- [x] 인메모리 소켓 세션 관리
 
 ### 1-6. Seed 데이터
-- [ ] 테스트용 사용자 5명
-- [ ] 친구 관계 설정
-- [ ] 샘플 채팅방 4개 + 메시지
-- [ ] `npm run seed` 명령으로 실행 가능
+- [x] 테스트용 사용자 6명
+- [x] 친구 관계 설정 (양방향)
+- [x] 샘플 채팅방 4개 + 메시지
+- [x] `npm run seed` 명령으로 실행 가능
 
 ### 1-7. Backend 단위 테스트
-- [ ] Users module 테스트 (controller + service)
-- [ ] Friends module 테스트
-- [ ] ChatRooms module 테스트
-- [ ] Messages module 테스트
-- [ ] Gateway 테스트
-- [ ] 6가지 입력 카테고리 적용
+- [x] Users module 테스트 (controller + service)
+- [x] Friends module 테스트
+- [x] ChatRooms module 테스트
+- [x] Messages module 테스트
+- [x] Gateway 테스트
+- [x] 6가지 입력 카테고리 적용 (6 suites, 70 tests pass)
 
 ---
 
