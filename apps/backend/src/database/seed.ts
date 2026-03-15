@@ -7,16 +7,27 @@ import { Message } from '../messages/message.entity';
 import 'reflect-metadata';
 
 async function seed() {
-  const ds = new DataSource({
-    type: 'postgres',
-    host: process.env.POSTGRES_HOST ?? 'localhost',
-    port: parseInt(process.env.POSTGRES_PORT ?? '5432', 10),
-    username: process.env.POSTGRES_USER ?? 'basemsg',
-    password: process.env.POSTGRES_PASSWORD ?? 'basemsg123',
-    database: process.env.POSTGRES_DB ?? 'basemsg',
-    entities: [User, Friend, ChatRoom, ChatRoomParticipant, Message],
-    synchronize: true,
-  });
+  const dbType = process.env.DB_TYPE ?? 'better-sqlite3';
+
+  const dsOptions = dbType === 'postgres'
+    ? {
+        type: 'postgres' as const,
+        host: process.env.POSTGRES_HOST ?? 'localhost',
+        port: parseInt(process.env.POSTGRES_PORT ?? '5432', 10),
+        username: process.env.POSTGRES_USER ?? 'basemsg',
+        password: process.env.POSTGRES_PASSWORD ?? 'basemsg123',
+        database: process.env.POSTGRES_DB ?? 'basemsg',
+        entities: [User, Friend, ChatRoom, ChatRoomParticipant, Message],
+        synchronize: true,
+      }
+    : {
+        type: 'better-sqlite3' as const,
+        database: process.env.SQLITE_PATH ?? './basemsg.sqlite',
+        entities: [User, Friend, ChatRoom, ChatRoomParticipant, Message],
+        synchronize: true,
+      };
+
+  const ds = new DataSource(dsOptions);
 
   await ds.initialize();
   console.log('[Seed] Database connected');

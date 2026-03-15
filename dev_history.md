@@ -12,3 +12,65 @@
 | 2026-03-14 | CLAUDE.md 업데이트 - 앱 스펙 반영 (기술스택, UX, DB, 테스트 정책 등) | 완료 |
 | 2026-03-14 | dev_history.md 생성 - 개발 히스토리 추적 파일 신규 생성 | 완료 |
 | 2026-03-14 | 프로젝트 초기화 - Expo SDK 54 기반 React Native 프로젝트 생성 | 완료 (Firebase Studio) |
+| 2026-03-15 | 모노레포 재구조화 - apps/mobile, apps/web, apps/backend, packages/shared | 완료 |
+| 2026-03-15 | npm workspaces 설정 - 루트 package.json, 공유 타입을 @basemsg/shared로 추출 | 완료 |
+| 2026-03-15 | GitHub 연동 - remote: muje2002/basemsg-firebase-claude, 코드 관리 규칙 설정 | 완료 |
+| 2026-03-15 | **Phase 1: Backend 인프라** (branch: feat/phase1-backend → merged) | 완료 |
+| 2026-03-15 | - Docker Compose 구성 (PostgreSQL 16 + Redis 7) | 완료 |
+| 2026-03-15 | - NestJS 백엔드 전체 구현 (5개 모듈: Users, Friends, ChatRooms, Messages, Gateway) | 완료 |
+| 2026-03-15 | - TypeORM entities (User, Friend, ChatRoom, ChatRoomParticipant, Message) | 완료 |
+| 2026-03-15 | - Socket.io Gateway 실시간 메시지 송수신 | 완료 |
+| 2026-03-15 | - Seed 스크립트 (6명 사용자, 친구 관계, 4개 채팅방, 메시지) | 완료 |
+| 2026-03-15 | - Backend 단위 테스트 70개 pass (6가지 입력 카테고리) | 완료 |
+| 2026-03-15 | **Phase 2: Mobile 백엔드 연동** (branch: feat/phase2-mobile-integration → merged) | 완료 |
+| 2026-03-15 | - API 클라이언트 서비스 (services/api.ts) - 모든 REST 엔드포인트 | 완료 |
+| 2026-03-15 | - Socket.io 채팅 화면 실시간 연동 (join/leave/receive) | 완료 |
+| 2026-03-15 | - 파일/이미지/동영상 첨부 (expo-image-picker, expo-document-picker) | 완료 |
+| 2026-03-15 | - 이모티콘 피커 UI (80개 이모지) + emoji 타입 메시지 | 완료 |
+| 2026-03-15 | - Mobile 단위 테스트 42개 pass (API 25 + Socket 17) | 완료 |
+| 2026-03-15 | **Phase 3: Web 프론트엔드** (branch: feat/phase3-web-frontend → merged) | 완료 |
+| 2026-03-15 | - Vite + React + react-router-dom 프로젝트 셋업 | 완료 |
+| 2026-03-15 | - 3-panel 메신저 레이아웃 (사이드바 + 목록 + 채팅방) | 완료 |
+| 2026-03-15 | - 채팅방 목록/검색, 메시지 송수신, 이모지 피커, 파일 첨부, 친구 관리 | 완료 |
+| 2026-03-15 | - 파스텔톤 CSS 테마 (모바일과 동일 색상) | 완료 |
+| 2026-03-15 | - Web API 서비스 + Socket.io 클라이언트 + Vite proxy 설정 | 완료 |
+| 2026-03-15 | - Web 단위 테스트 22개 pass | 완료 |
+| 2026-03-15 | **Phase 4: 통합 테스트 & CI/CD** (branch: feat/phase4-testing-cicd → merged) | 완료 |
+| 2026-03-15 | - Layer 2 Feature 테스트: User→Friend, ChatRoom→Message, Gateway→Message (11 tests) | 완료 |
+| 2026-03-15 | - Layer 3 E2E 시나리오 테스트: 전체 사용자 여정 SQLite in-memory (10 tests) | 완료 |
+| 2026-03-15 | - GitHub Actions CI 파이프라인 (ci.yml) - test → build | 완료 |
+| 2026-03-15 | - Message entity: enum → varchar (SQLite 호환) | 완료 |
+| 2026-03-15 | - AppModule: PostgreSQL / SQLite 듀얼 DB 지원 (DB_TYPE 환경변수) | 완료 |
+| 2026-03-15 | 실행 테스트 - 백엔드(SQLite) + 웹(Vite) + 모바일(Expo tunnel) 동시 구동 확인 | 완료 |
+
+## 테스트 현황 (Total: 155 tests)
+
+| 영역 | Layer | 개수 |
+|------|-------|------|
+| Backend Unit | Layer 1 | 70 |
+| Backend Feature | Layer 2 | 11 |
+| Backend E2E | Layer 3 | 10 |
+| Mobile Unit | Layer 1 | 42 |
+| Web Unit | Layer 1 | 22 |
+| **Total** | | **155** |
+
+## Git 브랜치 이력
+
+| Branch | 내용 | 상태 |
+|--------|------|------|
+| `main` | 메인 브랜치 | 최신 |
+| `feat/phase1-backend` | Backend 인프라 & API | merged → main |
+| `feat/phase2-mobile-integration` | Mobile 백엔드 연동 | merged → main |
+| `feat/phase3-web-frontend` | Web 프론트엔드 | merged → main |
+| `feat/phase4-testing-cicd` | 통합 테스트 & CI/CD | merged → main |
+
+## GitHub
+
+- Repo: https://github.com/muje2002/basemsg-firebase-claude
+- Expo 로그인 계정: `youngkihong`
+
+## 미해결 사항
+
+- Expo Go에서 앱 접속 확인 필요 (tunnel 구동은 확인, Expo Go에서 앱 목록에 안 보이는 이슈)
+- Docker 미설치 환경이라 SQLite로 대체 구동 중 (DB_TYPE=better-sqlite3)
+- 인증(Auth) 미구현 — 하드코딩된 user ID 사용 중
