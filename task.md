@@ -13,7 +13,7 @@
 | Backend API | ✅ 완료 | NestJS — Users, Friends, ChatRooms, Messages, Gateway |
 | DB (PostgreSQL/Redis) | ✅ 완료 | TypeORM entities, docker-compose 구성 |
 | Docker | ✅ 완료 | PostgreSQL 16 + Redis 7 컨테이너 |
-| Web Frontend | ❌ 미구현 | package.json만 존재 |
+| Web Frontend | ✅ 완료 | Vite + React, 3-panel 레이아웃, 채팅/친구 |
 | 테스트 (Backend) | ✅ 완료 | 6 suites, 70 tests pass |
 | 인증 | ❌ 미구현 | 하드코딩된 user ID |
 
@@ -99,20 +99,24 @@
 ## Phase 3: 웹 프론트엔드 (중규모 — branch: `feat/phase3-web-frontend`)
 
 ### 3-1. 웹 프로젝트 초기화
-- [ ] React (Next.js 또는 Vite) 셋업
-- [ ] @basemsg/shared 타입 공유
+- [x] Vite + React 셋업
+- [x] @basemsg/shared 타입 공유
+- [x] react-router-dom 라우팅
 
 ### 3-2. 웹 UI 구현
-- [ ] 3-tab 구조 (채팅방 목록, 채팅방, 친구 관리)
-- [ ] 파스텔톤 UI 테마
-- [ ] 반응형 레이아웃
+- [x] 3-panel 구조 (사이드바 + 채팅방 목록/친구 + 채팅방)
+- [x] 파스텔톤 UI 테마 (CSS variables)
+- [x] 채팅방 목록 + 검색
+- [x] 채팅방: 메시지, 이모지 피커, 파일 첨부
+- [x] 친구 목록 + 검색 + 삭제
 
 ### 3-3. 백엔드 연동
-- [ ] API + Socket.io 연동
-- [ ] 웹 로컬 저장소 (localStorage/IndexedDB)
+- [x] API 클라이언트 서비스
+- [x] Socket.io 클라이언트 서비스
+- [x] Vite proxy 설정 (/api, /socket.io)
 
 ### 3-4. 웹 테스트
-- [ ] 컴포넌트 + 서비스 단위 테스트
+- [x] API 서비스 단위 테스트 (22 tests, 6 input categories)
 
 ---
 
