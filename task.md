@@ -123,10 +123,23 @@
 ## Phase 4: 통합 & 마무리
 
 ### 4-1. Feature 테스트 (Layer 2)
-- [ ] 모듈 간 연동 테스트
+- [x] User → Friend 연동 테스트 (4 tests)
+- [x] ChatRoom → Message 연동 테스트 (3 tests)
+- [x] Gateway → Message 연동 테스트 (4 tests)
 
 ### 4-2. Scenario 테스트 (Layer 3)
-- [ ] E2E 사용자 여정 테스트
+- [x] E2E 사용자 여정 (SQLite in-memory, 10 tests)
+  - 회원가입 → 친구 → 채팅방 → 메시지 → 나가기 → 검증
 
 ### 4-3. CI/CD
-- [ ] GitHub Actions 파이프라인
+- [x] GitHub Actions (`ci.yml`)
+  - Backend: Unit → Feature → E2E
+  - Mobile: Unit tests
+  - Web: Unit tests
+  - Build: backend + web (tests 통과 후)
+
+### 전체 테스트 현황
+- Backend: 91 tests (Unit 70 + Feature 11 + E2E 10)
+- Mobile: 42 tests
+- Web: 22 tests
+- **Total: 155 tests**
