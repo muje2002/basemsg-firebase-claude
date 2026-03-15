@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-backend:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --prefix ../..
+      - name: Unit tests (Layer 1)
+        run: npx jest --no-cache src/ --testTimeout=30000
+      - name: Feature tests (Layer 2)
+        run: npx jest --no-cache test/feature/ --testTimeout=30000
+      - name: E2E tests (Layer 3)
+        run: npx jest --no-cache test/e2e/ --testTimeout=30000
+
+  test-mobile:
+    name: Mobile Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --prefix ../..
+      - name: Unit tests
+        run: npx jest --no-cache
+
+  test-web:
+    name: Web Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --prefix ../..
+      - name: Unit tests
+        run: npx jest --no-cache
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [test-backend, test-mobile, test-web]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Build backend
+        run: cd apps/backend && npx nest build
+      - name: Build web
+        run: cd apps/web && npx vite build

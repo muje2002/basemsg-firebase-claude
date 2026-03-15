@@ -31,11 +31,7 @@ export class Message {
   @Column({ type: 'text' })
   text!: string;
 
-  @Column({
-    type: 'enum',
-    enum: ['text', 'image', 'file', 'video', 'emoji'],
-    default: 'text',
-  })
+  @Column({ type: 'varchar', length: 10, default: 'text' })
   type!: 'text' | 'image' | 'file' | 'video' | 'emoji';
 
   @Column({ name: 'file_uri', nullable: true })
