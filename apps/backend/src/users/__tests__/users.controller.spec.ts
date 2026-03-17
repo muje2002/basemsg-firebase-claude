@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import { UsersController } from '../users.controller';
 import { UsersService } from '../users.service';
 
@@ -6,6 +7,7 @@ const mockUsersService = () => ({
   create: jest.fn(),
   findAll: jest.fn(),
   findOne: jest.fn(),
+  findOrCreateByClerk: jest.fn(),
 });
 
 describe('UsersController', () => {
@@ -15,7 +17,10 @@ describe('UsersController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [UsersController],
-      providers: [{ provide: UsersService, useFactory: mockUsersService }],
+      providers: [
+        { provide: UsersService, useFactory: mockUsersService },
+        { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('test-secret') } },
+      ],
     }).compile();
 
     controller = module.get(UsersController);
