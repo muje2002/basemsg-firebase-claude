@@ -14,5 +14,8 @@
     "mobile:lint": "npm run lint --workspace=@basemsg/mobile",
     "web": "npm run start --workspace=@basemsg/web",
     "backend": "npm run start --workspace=@basemsg/backend"
+  },
+  "dependencies": {
+    "http-proxy-middleware": "^3.0.5"
   }
 }

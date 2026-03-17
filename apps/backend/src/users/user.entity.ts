@@ -13,6 +13,9 @@ export class User {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
+  @Column({ name: 'clerk_id', unique: true, nullable: true })
+  clerkId?: string;
+
   @Column({ length: 100 })
   name!: string;
 

@@ -1,6 +1,32 @@
 import type { ChatRoom, Message, User, Friend } from '@basemsg/shared';
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000/api';
+import { Platform } from 'react-native';
+import { getAuthHeaders } from '@/services/auth';
+
+const getBaseUrl = (): string => {
+  if (process.env.EXPO_PUBLIC_API_URL) return process.env.EXPO_PUBLIC_API_URL;
+
+  // Web: use same origin (dev-proxy serves both Expo web and API)
+  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    return `${window.location.origin}/api`;
+  }
+
+  // Native (Expo Go on physical device or emulator):
+  // Use the Expo dev server origin which proxies /api to backend via metro.config.js
+  const Constants = require('expo-constants').default;
+  const debuggerHost = Constants.expoConfig?.hostUri ?? Constants.manifest2?.extra?.expoGo?.debuggerHost;
+  if (debuggerHost) {
+    const origin = `http://${debuggerHost.split(':')[0]}:8081`;
+    return `${origin}/api`;
+  }
+
+  // Android emulator fallback
+  if (Platform.OS === 'android') return 'http://10.0.2.2:3000/api';
+  // iOS simulator / fallback
+  return 'http://localhost:3000/api';
+};
+
+const BASE_URL = getBaseUrl();
 
 // Temporary hardcoded user ID until auth is implemented
 export const CURRENT_USER_ID_KEY = 'basemsg:currentUserId';
@@ -22,9 +48,11 @@ async function request<T>(
   options: RequestInit = {},
 ): Promise<T> {
   const url = `${BASE_URL}${path}`;
+  const authHeaders = await getAuthHeaders();
   const res = await fetch(url, {
     headers: {
       'Content-Type': 'application/json',
+      ...authHeaders,
       ...options.headers,
     },
     ...options,

@@ -35,4 +35,23 @@ export class UsersService {
   async findByPhone(phone: string): Promise<User | null> {
     return this.userRepo.findOne({ where: { phone } });
   }
+
+  async findByClerkId(clerkId: string): Promise<User | null> {
+    return this.userRepo.findOne({ where: { clerkId } });
+  }
+
+  async findOrCreateByClerk(clerkId: string, name: string, phone: string): Promise<User> {
+    let user = await this.findByClerkId(clerkId);
+    if (user) return user;
+
+    // Check if phone already exists (migration case)
+    user = await this.findByPhone(phone);
+    if (user) {
+      user.clerkId = clerkId;
+      return this.userRepo.save(user);
+    }
+
+    const newUser = this.userRepo.create({ clerkId, name, phone });
+    return this.userRepo.save(newUser);
+  }
 }

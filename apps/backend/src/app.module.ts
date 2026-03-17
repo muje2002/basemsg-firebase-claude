@@ -6,6 +6,7 @@ import { FriendsModule } from './friends/friends.module';
 import { ChatRoomsModule } from './chat-rooms/chat-rooms.module';
 import { MessagesModule } from './messages/messages.module';
 import { GatewayModule } from './gateway/gateway.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -27,6 +28,9 @@ import { GatewayModule } from './gateway/gateway.module';
             username: config.get<string>('POSTGRES_USER', 'basemsg'),
             password: config.get<string>('POSTGRES_PASSWORD', 'basemsg123'),
             database: config.get<string>('POSTGRES_DB', 'basemsg'),
+            ssl: config.get<string>('POSTGRES_SSL', 'false') === 'true'
+              ? { rejectUnauthorized: false }
+              : false,
             autoLoadEntities: true,
             synchronize: true,
           };
@@ -40,6 +44,7 @@ import { GatewayModule } from './gateway/gateway.module';
         } as TypeOrmModuleOptions;
       },
     }),
+    AuthModule,
     UsersModule,
     FriendsModule,
     ChatRoomsModule,
