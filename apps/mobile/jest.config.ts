@@ -8,6 +8,9 @@ const config: Config = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
     '^@basemsg/shared$': '<rootDir>/../../packages/shared/src/index',
+    '^react-native$': '<rootDir>/__mocks__/react-native.ts',
+    '^expo-constants$': '<rootDir>/__mocks__/expo-constants.ts',
+    '^expo-secure-store$': '<rootDir>/__mocks__/expo-secure-store.ts',
   },
   transform: {
     '^.+\\.ts$': 'ts-jest',

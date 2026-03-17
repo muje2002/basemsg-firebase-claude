@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule } from '@nestjs/config';
 import * as request from 'supertest';
 import { UsersModule } from '../../src/users/users.module';
 import { FriendsModule } from '../../src/friends/friends.module';
@@ -23,6 +24,7 @@ describe('E2E: Full User Journey', () => {
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [
+        ConfigModule.forRoot({ isGlobal: true }),
         TypeOrmModule.forRoot({
           type: 'better-sqlite3',
           database: ':memory:',
