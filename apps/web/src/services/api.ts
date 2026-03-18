@@ -1,6 +1,6 @@
 import type { ChatRoom, Message, User, Friend } from '@basemsg/shared';
 
-const BASE_URL = '/api';
+const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 let currentUserId: string | null = null;
 
@@ -15,10 +15,34 @@ export function getCurrentUserId(): string {
   return currentUserId;
 }
 
+// Auth token getter — set from App.tsx after Clerk login
+let globalGetToken: () => Promise<string | null> = async () => null;
+
+export function setTokenGetter(getter: () => Promise<string | null>) {
+  globalGetToken = getter;
+}
+
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  const token = await globalGetToken();
+  if (!token) return {};
+  return { Authorization: `Bearer ${token}` };
+}
+
+function withUserId(path: string): string {
+  const userId = getCurrentUserId();
+  const sep = path.includes('?') ? '&' : '?';
+  return `${path}${sep}userId=${userId}`;
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const authHeaders = await getAuthHeaders();
   const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...options.headers },
     ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...authHeaders,
+      ...options.headers,
+    },
   });
   if (!res.ok) {
     const body = await res.text();
@@ -28,19 +52,15 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   return res.json();
 }
 
-function withUserId(path: string): string {
-  const userId = getCurrentUserId();
-  const sep = path.includes('?') ? '&' : '?';
-  return `${path}${sep}userId=${userId}`;
-}
-
-// Users
+// Users (sync uses ClerkAuthGuard — no userId needed)
+export const syncUser = (data: { name: string; phone: string }) =>
+  request<User>('/users/sync', { method: 'POST', body: JSON.stringify(data) });
 export const createUser = (data: { name: string; phone: string }) =>
   request<User>('/users', { method: 'POST', body: JSON.stringify(data) });
 export const getUser = (id: string) => request<User>(`/users/${id}`);
 export const getAllUsers = () => request<User[]>('/users');
 
-// Friends
+// Friends (uses userId query param — backend not yet migrated to auth guard)
 export const fetchFriends = () => request<Friend[]>(withUserId('/friends'));
 export const addFriend = (friendId: string) =>
   request<Friend>(withUserId('/friends'), { method: 'POST', body: JSON.stringify({ friendId }) });

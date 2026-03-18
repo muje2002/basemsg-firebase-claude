@@ -42,6 +42,14 @@
 | 2026-03-15 | - Message entity: enum → varchar (SQLite 호환) | 완료 |
 | 2026-03-15 | - AppModule: PostgreSQL / SQLite 듀얼 DB 지원 (DB_TYPE 환경변수) | 완료 |
 | 2026-03-15 | 실행 테스트 - 백엔드(SQLite) + 웹(Vite) + 모바일(Expo tunnel) 동시 구동 확인 | 완료 |
+| 2026-03-18 | **배포 환경 설정** | |
+| 2026-03-18 | - CLAUDE.md 배포 환경 업데이트 (OCI, Neon, Upstash, Clerk) | 완료 |
+| 2026-03-18 | - Web Clerk 인증 연동 (@clerk/react v6, SignIn/SignUp 컴포넌트, 인증 가드) | 완료 |
+| 2026-03-18 | - Web API 환경변수 적용 (VITE_API_URL, VITE_SOCKET_URL, VITE_CLERK_PUBLISHABLE_KEY) | 완료 |
+| 2026-03-18 | - Web API Bearer 토큰 인증 추가 (Clerk getToken → Authorization 헤더) | 완료 |
+| 2026-03-18 | - Web 빌드 성공 확인 (tsc + vite build) | 완료 |
+| 2026-03-18 | - Expo EAS 로그인 | 대기 (계정 비밀번호 확인 필요) |
+| 2026-03-18 | - Cloudflare Pages 연동 | 대기 (유저가 대시보드에서 프로젝트 생성) |
 
 ## 테스트 현황 (Total: 155 tests)
 
@@ -69,8 +77,31 @@
 - Repo: https://github.com/muje2002/basemsg-firebase-claude
 - Expo 로그인 계정: `youngkihong`
 
+## 배포 환경
+
+| 서비스 | 플랫폼 | 상태 |
+|--------|--------|------|
+| Backend | OCI (https://basemsg.duckdns.org) | 배포 완료, Neon/Upstash/Clerk 연동 완료 |
+| PostgreSQL | Neon | 연동 완료 |
+| Redis | Upstash | 연동 완료 |
+| Auth | Clerk | Mobile 연동 완료, Web 연동 완료 |
+| Mobile | Expo EAS Build | 대기 (계정 로그인 필요) |
+| Web | Cloudflare Pages | 대기 (대시보드에서 프로젝트 생성 필요) |
+
+### Cloudflare Pages 설정 가이드
+
+| 항목 | 값 |
+|------|-----|
+| Root directory | (비워두기 — 모노레포 루트) |
+| Build command | `npm install && npm run build --workspace=@basemsg/web` |
+| Build output directory | `apps/web/dist` |
+| NODE_VERSION (환경변수) | `20` |
+| VITE_API_URL | `https://basemsg.duckdns.org/api` |
+| VITE_SOCKET_URL | `https://basemsg.duckdns.org` |
+| VITE_CLERK_PUBLISHABLE_KEY | Clerk 대시보드에서 복사 |
+
 ## 미해결 사항
 
-- Expo Go에서 앱 접속 확인 필요 (tunnel 구동은 확인, Expo Go에서 앱 목록에 안 보이는 이슈)
-- Docker 미설치 환경이라 SQLite로 대체 구동 중 (DB_TYPE=better-sqlite3)
-- 인증(Auth) 미구현 — 하드코딩된 user ID 사용 중
+- Expo EAS 로그인 실패 — Expo 계정 비밀번호 재확인 필요
+- Cloudflare Pages 프로젝트 생성 — 유저가 대시보드에서 진행
+- 백엔드 friends/chat-rooms/messages 컨트롤러에 ClerkAuthGuard 미적용 (현재 userId 쿼리파라미터 방식 유지)

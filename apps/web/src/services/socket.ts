@@ -6,7 +6,7 @@ let socket: Socket | null = null;
 export function connectSocket(userId: string): Socket {
   if (socket?.connected) return socket;
 
-  socket = io('/', {
+  socket = io(import.meta.env.VITE_SOCKET_URL || '/', {
     auth: { userId },
     autoConnect: true,
     reconnection: true,
