@@ -12,10 +12,10 @@ basemsg는 메신저 앱 서비스로, 모바일(Android + iOS)과 웹 프론트
 - **Frontend (Web):** TBD — `apps/web/`
 - **Backend:** Node.js + NestJS — `apps/backend/`
 - **Shared:** TypeScript types — `packages/shared/`
-- **Database:** PostgreSQL + Redis
+- **Database:** PostgreSQL (Neon) + Redis (Upstash)
 - **Real-time:** Socket.io
-- **Infrastructure:** Docker
-- **Auth:** 아직 미구현; 향후 OAuth 2.0 기반 고려
+- **Auth:** Clerk (@clerk/clerk-expo on mobile, Clerk Backend SDK on server)
+- **Infrastructure:** OCI (Oracle Cloud Infrastructure) for backend server
 
 ## Monorepo Structure
 
@@ -27,7 +27,6 @@ basemsg/
 │   └── backend/         # NestJS 백엔드 API 서버
 ├── packages/
 │   └── shared/          # 공유 타입 (ChatRoom, Message, User, Friend)
-├── docker-compose.yml   # PostgreSQL, Redis, backend 컨테이너
 ├── package.json         # npm workspaces 루트
 └── CLAUDE.md
 ```
@@ -136,13 +135,13 @@ Contains TypeScript type definitions shared across all apps: `ChatRoom`, `Messag
 - 채팅방 별 메시지 히스토리 (최근 1000개)
 - 친구 목록
 
-**서버 저장 (PostgreSQL):**
+**서버 저장 (PostgreSQL — Neon):**
 - User 목록
 - 각 User의 친구 목록
 - 채팅방 목록 및 참여자
 - 메시지 히스토리
 
-**캐시 (Redis):**
+**캐시 (Redis — Upstash):**
 - 실시간 소켓 세션 관리
 - 온라인 상태 추적
 
@@ -180,6 +179,16 @@ Contains TypeScript type definitions shared across all apps: `ChatRoom`, `Messag
 - 프로그래밍 언어 기본적인 코딩 룰을 따를 것
 - TypeScript strict mode 사용
 - ESLint 설정 준수
+
+## Deployment
+
+| 서비스 | 플랫폼 | 비고 |
+|--------|--------|------|
+| Backend (NestJS) | OCI (Oracle Cloud Infrastructure) | 서버 배포 |
+| PostgreSQL | Neon | Serverless Postgres, 백엔드 연동 완료 |
+| Redis | Upstash | Serverless Redis, 백엔드 연동 완료 |
+| Auth | Clerk | 모바일: @clerk/clerk-expo, 백엔드: Clerk Backend SDK |
+| Mobile | Expo EAS Build | Android/iOS 빌드 및 배포 |
 
 ## Future Considerations
 
