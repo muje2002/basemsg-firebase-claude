@@ -1,15 +1,18 @@
-import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { MessagesService } from './messages.service';
 import { CreateMessageDto } from './dto/create-message.dto';
+import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
+import { ClerkUser } from '../auth/clerk-user.decorator';
 
 @Controller()
+@UseGuards(ClerkAuthGuard)
 export class MessagesController {
   constructor(private readonly messagesService: MessagesService) {}
 
   @Post('chat-rooms/:roomId/messages')
   create(
     @Param('roomId') roomId: string,
-    @Query('userId') userId: string,
+    @ClerkUser() userId: string,
     @Body() dto: CreateMessageDto,
   ) {
     return this.messagesService.create(roomId, userId, dto);
@@ -30,7 +33,7 @@ export class MessagesController {
 
   @Get('messages/search')
   searchMessages(
-    @Query('userId') userId: string,
+    @ClerkUser() userId: string,
     @Query('q') query: string,
     @Query('limit') limit?: string,
   ) {

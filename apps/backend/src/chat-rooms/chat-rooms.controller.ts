@@ -1,21 +1,24 @@
-import { Controller, Get, Post, Delete, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Param, UseGuards } from '@nestjs/common';
 import { ChatRoomsService } from './chat-rooms.service';
 import { CreateChatRoomDto } from './dto/create-chat-room.dto';
+import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
+import { ClerkUser } from '../auth/clerk-user.decorator';
 
 @Controller('chat-rooms')
+@UseGuards(ClerkAuthGuard)
 export class ChatRoomsController {
   constructor(private readonly chatRoomsService: ChatRoomsService) {}
 
   @Post()
   create(
-    @Query('userId') userId: string,
+    @ClerkUser() userId: string,
     @Body() dto: CreateChatRoomDto,
   ) {
     return this.chatRoomsService.create(userId, dto);
   }
 
   @Get()
-  findAll(@Query('userId') userId: string) {
+  findAll(@ClerkUser() userId: string) {
     return this.chatRoomsService.findAllForUser(userId);
   }
 
@@ -27,7 +30,7 @@ export class ChatRoomsController {
   @Delete(':id/leave')
   leave(
     @Param('id') roomId: string,
-    @Query('userId') userId: string,
+    @ClerkUser() userId: string,
   ) {
     return this.chatRoomsService.leave(roomId, userId);
   }
