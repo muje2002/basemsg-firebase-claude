@@ -10,8 +10,14 @@ const config: Config = {
     '^@basemsg/shared$': '<rootDir>/../../packages/shared/src/index',
   },
   transform: {
-    '^.+\\.ts$': 'ts-jest',
+    '^.+\\.ts$': ['ts-jest', {
+      diagnostics: false,
+    }],
+  },
+  globals: {
+    'import.meta': { env: { VITE_API_URL: '/api' } },
   },
 };
 
 export default config;
+

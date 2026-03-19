@@ -7,11 +7,29 @@ import { UsersModule } from '../../src/users/users.module';
 import { FriendsModule } from '../../src/friends/friends.module';
 import { ChatRoomsModule } from '../../src/chat-rooms/chat-rooms.module';
 import { MessagesModule } from '../../src/messages/messages.module';
+import { AuthModule } from '../../src/auth/auth.module';
+import { ClerkAuthGuard } from '../../src/auth/clerk-auth.guard';
 import { User } from '../../src/users/user.entity';
 import { Friend } from '../../src/friends/friend.entity';
 import { ChatRoom } from '../../src/chat-rooms/chat-room.entity';
 import { ChatRoomParticipant } from '../../src/chat-rooms/chat-room-participant.entity';
 import { Message } from '../../src/messages/message.entity';
+
+/**
+ * Mock ClerkAuthGuard that reads userId from query param instead of JWT.
+ * This allows E2E tests to run without Clerk auth infrastructure.
+ */
+class MockClerkAuthGuard {
+  canActivate(context: any) {
+    const request = context.switchToHttp().getRequest();
+    const userId = request.query?.userId;
+    if (userId) {
+      request.userId = userId;
+      request.clerkUserId = userId;
+    }
+    return true;
+  }
+}
 
 /**
  * Layer 3 Scenario Test: Full user journey E2E
@@ -32,12 +50,16 @@ describe('E2E: Full User Journey', () => {
           synchronize: true,
           dropSchema: true,
         }),
+        AuthModule,
         UsersModule,
         FriendsModule,
         ChatRoomsModule,
         MessagesModule,
       ],
-    }).compile();
+    })
+      .overrideGuard(ClerkAuthGuard)
+      .useClass(MockClerkAuthGuard)
+      .compile();
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));

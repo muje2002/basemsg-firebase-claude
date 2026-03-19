@@ -28,12 +28,6 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
   return { Authorization: `Bearer ${token}` };
 }
 
-function withUserId(path: string): string {
-  const userId = getCurrentUserId();
-  const sep = path.includes('?') ? '&' : '?';
-  return `${path}${sep}userId=${userId}`;
-}
-
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const authHeaders = await getAuthHeaders();
   const res = await fetch(`${BASE_URL}${path}`, {
@@ -60,12 +54,12 @@ export const createUser = (data: { name: string; phone: string }) =>
 export const getUser = (id: string) => request<User>(`/users/${id}`);
 export const getAllUsers = () => request<User[]>('/users');
 
-// Friends (uses userId query param — backend not yet migrated to auth guard)
-export const fetchFriends = () => request<Friend[]>(withUserId('/friends'));
+// Friends — userId is now extracted from Bearer token by ClerkAuthGuard
+export const fetchFriends = () => request<Friend[]>('/friends');
 export const addFriend = (friendId: string) =>
-  request<Friend>(withUserId('/friends'), { method: 'POST', body: JSON.stringify({ friendId }) });
+  request<Friend>('/friends', { method: 'POST', body: JSON.stringify({ friendId }) });
 export const removeFriend = (friendId: string) =>
-  request<void>(withUserId(`/friends/${friendId}`), { method: 'DELETE' });
+  request<void>(`/friends/${friendId}`, { method: 'DELETE' });
 
 // Chat Rooms
 export interface ApiChatRoom {
@@ -75,12 +69,12 @@ export interface ApiChatRoom {
   participants: Array<{ id: string; user: User; joinedAt: string }>;
 }
 
-export const fetchChatRooms = () => request<ApiChatRoom[]>(withUserId('/chat-rooms'));
+export const fetchChatRooms = () => request<ApiChatRoom[]>('/chat-rooms');
 export const getChatRoom = (id: string) => request<ApiChatRoom>(`/chat-rooms/${id}`);
 export const createChatRoom = (name: string, participantIds: string[]) =>
-  request<ApiChatRoom>(withUserId('/chat-rooms'), { method: 'POST', body: JSON.stringify({ name, participantIds }) });
+  request<ApiChatRoom>('/chat-rooms', { method: 'POST', body: JSON.stringify({ name, participantIds }) });
 export const leaveChatRoom = (roomId: string) =>
-  request<void>(withUserId(`/chat-rooms/${roomId}/leave`), { method: 'DELETE' });
+  request<void>(`/chat-rooms/${roomId}/leave`, { method: 'DELETE' });
 
 // Messages
 export const fetchMessages = (roomId: string, limit = 100, before?: string) => {
@@ -89,4 +83,4 @@ export const fetchMessages = (roomId: string, limit = 100, before?: string) => {
   return request<Message[]>(path);
 };
 export const sendMessage = (roomId: string, data: { text: string; type?: string }) =>
-  request<Message>(withUserId(`/chat-rooms/${roomId}/messages`), { method: 'POST', body: JSON.stringify(data) });
+  request<Message>(`/chat-rooms/${roomId}/messages`, { method: 'POST', body: JSON.stringify(data) });
