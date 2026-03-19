@@ -1,4 +1,8 @@
 import { faker } from '@faker-js/faker';
+
+// Mock env module to avoid import.meta.env (Vite-only syntax) in Jest
+jest.mock('../env', () => ({ BASE_URL: '/api' }));
+
 import {
   setCurrentUserId,
   getCurrentUserId,

@@ -1,7 +1,5 @@
 import type { ChatRoom, Message, User, Friend } from '@basemsg/shared';
-
-// Support both Vite (import.meta.env) and Jest (process.env) environments
-const BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) || '/api';
+import { BASE_URL } from './env';
 
 let currentUserId: string | null = null;
 
