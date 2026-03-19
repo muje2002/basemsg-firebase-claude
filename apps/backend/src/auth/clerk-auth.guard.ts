@@ -3,6 +3,8 @@ import {
   ExecutionContext,
   Injectable,
   UnauthorizedException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { verifyToken } from '@clerk/backend';
 import { ConfigService } from '@nestjs/config';
@@ -13,6 +15,7 @@ import { Request } from 'express';
 export class ClerkAuthGuard implements CanActivate {
   constructor(
     private readonly config: ConfigService,
+    @Inject(forwardRef(() => UsersService))
     private readonly usersService: UsersService,
   ) {}
 
