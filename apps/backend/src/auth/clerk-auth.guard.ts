@@ -3,20 +3,17 @@ import {
   ExecutionContext,
   Injectable,
   UnauthorizedException,
-  Inject,
-  forwardRef,
 } from '@nestjs/common';
 import { verifyToken } from '@clerk/backend';
 import { ConfigService } from '@nestjs/config';
-import { UsersService } from '../users/users.service';
+import { DataSource } from 'typeorm';
 import { Request } from 'express';
 
 @Injectable()
 export class ClerkAuthGuard implements CanActivate {
   constructor(
     private readonly config: ConfigService,
-    @Inject(forwardRef(() => UsersService))
-    private readonly usersService: UsersService,
+    private readonly dataSource: DataSource,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -35,10 +32,13 @@ export class ClerkAuthGuard implements CanActivate {
       const clerkId = payload.sub;
       (request as Request & { clerkUserId: string }).clerkUserId = clerkId;
 
-      // Resolve clerkId → internal userId
-      const user = await this.usersService.findByClerkId(clerkId);
-      if (user) {
-        (request as Request & { userId: string }).userId = user.id;
+      // Resolve clerkId → internal userId via direct query
+      const result = await this.dataSource.query(
+        `SELECT id FROM "user" WHERE "clerkId" = $1 LIMIT 1`,
+        [clerkId],
+      );
+      if (result.length > 0) {
+        (request as Request & { userId: string }).userId = result[0].id;
       }
 
       return true;
