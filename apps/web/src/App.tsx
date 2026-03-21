@@ -18,7 +18,7 @@ export function App() {
 
   // Register token getter for API service
   useEffect(() => {
-    setTokenGetter(() => getToken());
+    setTokenGetter(getToken);
   }, [getToken]);
 
   // Sync Clerk user to backend after login
