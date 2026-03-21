@@ -5,10 +5,17 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ClerkProvider, useAuth, useUser } from '@clerk/clerk-expo';
 import * as SecureStore from 'expo-secure-store';
+import * as Sentry from '@sentry/react-native';
 import { Colors } from '@/constants/theme';
 import { setCurrentUserId } from '@/services/api';
 import { connectSocket } from '@/services/socket';
 import { syncUserToBackend, setAuthGetters } from '@/services/auth';
+
+Sentry.init({
+  dsn: 'https://c2f40e4294d8f4e554ed7c804208cba8@o4511083025858560.ingest.us.sentry.io/4511083055546368',
+  tracesSampleRate: 1.0,
+  environment: __DEV__ ? 'development' : 'production',
+});
 
 const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? '';
 
@@ -125,10 +132,12 @@ function RootLayoutNav() {
   );
 }
 
-export default function RootLayout() {
+function RootLayout() {
   return (
     <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} tokenCache={tokenCache}>
       <RootLayoutNav />
     </ClerkProvider>
   );
 }
+
+export default Sentry.wrap(RootLayout);

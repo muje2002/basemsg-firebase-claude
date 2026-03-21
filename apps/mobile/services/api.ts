@@ -1,6 +1,7 @@
 import type { ChatRoom, Message, User, Friend } from '@basemsg/shared';
 
 import { Platform } from 'react-native';
+import * as Sentry from '@sentry/react-native';
 import { getAuthHeaders } from '@/services/auth';
 
 const getBaseUrl = (): string => {
@@ -60,7 +61,9 @@ async function request<T>(
 
   if (!res.ok) {
     const body = await res.text();
-    throw new Error(`API error ${res.status}: ${body}`);
+    const err = new Error(`API error ${res.status}: ${body}`);
+    Sentry.captureException(err, { extra: { url, status: res.status, body } });
+    throw err;
   }
 
   if (res.status === 204) return undefined as T;
