@@ -87,7 +87,7 @@ jobs:
           host: ${{ secrets.OCI_HOST }}
           username: ${{ secrets.OCI_USERNAME }}
           key: ${{ secrets.OCI_SSH_KEY }}
-          command_timeout: 30m
+          command_timeout: 60m
           script: |
             cd /home/ubuntu/services/basemsg
             git pull origin main

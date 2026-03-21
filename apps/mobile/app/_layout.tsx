@@ -5,8 +5,6 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ClerkProvider, useAuth, useUser } from '@clerk/clerk-expo';
 import * as SecureStore from 'expo-secure-store';
-import 'react-native-reanimated';
-
 import { Colors } from '@/constants/theme';
 import { setCurrentUserId } from '@/services/api';
 import { connectSocket } from '@/services/socket';
