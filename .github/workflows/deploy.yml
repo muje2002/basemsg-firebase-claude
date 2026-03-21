@@ -23,4 +23,5 @@ jobs:
             git pull origin main
 
             cd /home/ubuntu/services
-            docker compose up -d --build basemsg-backend
+            docker compose build --no-cache basemsg-backend
+            docker compose up -d basemsg-backend
