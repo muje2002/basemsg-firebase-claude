@@ -34,7 +34,7 @@ export class ClerkAuthGuard implements CanActivate {
 
       // Resolve clerkId → internal userId via direct query
       const result = await this.dataSource.query(
-        `SELECT id FROM "user" WHERE "clerkId" = $1 LIMIT 1`,
+        `SELECT id FROM users WHERE clerk_id = $1 LIMIT 1`,
         [clerkId],
       );
       if (result.length > 0) {
