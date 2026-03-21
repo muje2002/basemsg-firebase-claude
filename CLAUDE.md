@@ -463,6 +463,24 @@ Login (Clerk SignIn/SignUp)
 
 ---
 
+## Error Monitoring (Sentry)
+
+- **SDK:** `@sentry/react-native` — `apps/mobile/app/_layout.tsx`에서 초기화
+- **API 에러 캡처:** `apps/mobile/services/api.ts`에서 `Sentry.captureException`
+- **DSN:** `https://c2f40e4294d8f4e554ed7c804208cba8@o4511083025858560.ingest.us.sentry.io/4511083055546368`
+- **Organization:** `basemsg` / **Project:** `react-native`
+- **환경 구분:** `__DEV__` → development, 아니면 production
+
+---
+
+## Metro Server (개발용)
+
+- **자동 시작:** `start-metro.bat` → Windows 시작 프로그램 등록
+- **Tailscale IP:** 스마트폰에서 `http://<Tailscale IP>:8081`로 접속
+- **모노레포 설정:** `apps/mobile/metro.config.js` — 루트 node_modules 우선 참조
+
+---
+
 ## Code Management
 
 - **소규모 개발:** 완료 시마다 테스트 pass 확인 후 git commit

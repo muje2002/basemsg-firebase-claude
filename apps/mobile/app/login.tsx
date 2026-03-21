@@ -39,12 +39,17 @@ export default function LoginScreen() {
         identifier: email.trim(),
         password,
       });
+      console.log('[Login] SignIn result status:', result.status, JSON.stringify(result));
       if (result.status === 'complete') {
         await setSignInActive({ session: result.createdSessionId });
-        // _layout.tsx will handle navigation after sync
+      } else {
+        Alert.alert('로그인 오류', `예상치 못한 상태: ${result.status}`);
       }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : '로그인에 실패했습니다.';
+      console.log('[Login] SignIn error:', JSON.stringify(err));
+      const clerkErr = err as { errors?: { message: string }[] };
+      const message = clerkErr?.errors?.[0]?.message
+        ?? (err instanceof Error ? err.message : '로그인에 실패했습니다.');
       Alert.alert('로그인 오류', message);
     } finally {
       setLoading(false);
@@ -62,7 +67,10 @@ export default function LoginScreen() {
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
       setPendingVerification(true);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : '회원가입에 실패했습니다.';
+      console.error('[Login] SignUp error:', JSON.stringify(err));
+      const clerkErr = err as { errors?: { message: string }[] };
+      const message = clerkErr?.errors?.[0]?.message
+        ?? (err instanceof Error ? err.message : '회원가입에 실패했습니다.');
       Alert.alert('회원가입 오류', message);
     } finally {
       setLoading(false);

@@ -100,8 +100,22 @@
 | VITE_SOCKET_URL | `https://basemsg.duckdns.org` |
 | VITE_CLERK_PUBLISHABLE_KEY | Clerk 대시보드에서 복사 |
 
+## 2026-03-21~22 개발 내역
+
+| Date | Task | Result |
+|------|------|--------|
+| 2026-03-21 | CLAUDE.md 전면 업데이트 — 프로젝트 전체 정보 통합 (코드구조, API, DB 스키마, 배포, 테마 등) | 완료 |
+| 2026-03-21 | package-lock.json 동기화 — expo-dev-client 등 누락 패키지 추가 (CI npm ci 실패 해결) | 완료 |
+| 2026-03-21 | CI/CD 수정 — deploy timeout 30m→60m, 고스트 컨테이너 정리 스크립트 추가 | 완료 |
+| 2026-03-21 | react-native-reanimated 제거 — v4가 New Architecture 필수 + property is not writable 에러 유발 | 완료 |
+| 2026-03-21 | React Compiler 비활성화 — useMemoCache null 에러 해결 | 완료 |
+| 2026-03-21 | React 중복 인스턴스 해결 — 루트 package.json에 react 19.1.0 고정, metro.config.js 모노레포 설정 | 완료 |
+| 2026-03-21 | Expo EAS dev build — Android APK 빌드 성공, 스마트폰 설치 완료 | 완료 |
+| 2026-03-21 | Metro 서버 설정 — start-metro.bat + Windows 시작 프로그램 등록, Tailscale IP 연결 | 완료 |
+| 2026-03-21 | Sentry 에러 모니터링 연동 — @sentry/react-native, _layout.tsx 초기화, api.ts 에러 캡처 | 완료 |
+| 2026-03-22 | 로그인 에러 디버깅 — Clerk needs_second_factor 해결 (유저 삭제 후 재가입), 에러 로깅 개선 | 완료 |
+
 ## 미해결 사항
 
-- Expo EAS 로그인 실패 — Expo 계정 비밀번호 재확인 필요
 - Cloudflare Pages 프로젝트 생성 — 유저가 대시보드에서 진행
 - 백엔드 friends/chat-rooms/messages 컨트롤러에 ClerkAuthGuard 미적용 (현재 userId 쿼리파라미터 방식 유지)
