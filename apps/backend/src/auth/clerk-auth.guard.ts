@@ -42,7 +42,8 @@ export class ClerkAuthGuard implements CanActivate {
       }
 
       return true;
-    } catch {
+    } catch (error) {
+      console.error('[ClerkAuthGuard] Token verification failed:', error);
       throw new UnauthorizedException('Invalid token');
     }
   }
