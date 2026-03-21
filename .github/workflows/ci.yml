@@ -74,3 +74,23 @@ jobs:
         run: cd apps/backend && npx nest build
       - name: Build web
         run: cd apps/web && npx vite build
+
+  deploy-backend:
+    name: Deploy Backend
+    needs: [build]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.OCI_HOST }}
+          username: ${{ secrets.OCI_USERNAME }}
+          key: ${{ secrets.OCI_SSH_KEY }}
+          command_timeout: 30m
+          script: |
+            cd /home/ubuntu/services/basemsg
+            git pull origin main
+
+            cd /home/ubuntu/services
+            docker compose up -d --build basemsg-backend
