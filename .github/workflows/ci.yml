@@ -93,6 +93,8 @@ jobs:
             git pull origin main
 
             cd /home/ubuntu/services
+            docker compose down basemsg-backend --remove-orphans 2>/dev/null || true
+            docker rm -f basemsg-backend 2>/dev/null || true
             docker compose up -d --build basemsg-backend
 
   deploy-web:
