@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
+import { DataSource } from 'typeorm';
 import { UsersController } from '../users.controller';
 import { UsersService } from '../users.service';
 
@@ -20,6 +21,7 @@ describe('UsersController', () => {
       providers: [
         { provide: UsersService, useFactory: mockUsersService },
         { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('test-secret') } },
+        { provide: DataSource, useValue: { query: jest.fn().mockResolvedValue([]) } },
       ],
     }).compile();
 
