@@ -59,8 +59,13 @@ export default function SettingsScreen() {
   const handleSaveName = async () => {
     if (!nameInput.trim()) return;
     try {
-      // TODO: Add PUT /api/users/:id endpoint for name update
-      Alert.alert('알림', '이름 변경 기능은 준비 중입니다.');
+      const { apiUpdateMe } = await import('@/services/api');
+      const updated = await apiUpdateMe({ name: nameInput.trim() });
+      setUserName(updated.name);
+      Alert.alert('완료', '이름이 변경되었습니다.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : '이름 변경에 실패했습니다.';
+      Alert.alert('오류', message);
     } finally {
       setEditingName(false);
     }

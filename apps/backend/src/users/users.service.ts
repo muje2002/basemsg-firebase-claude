@@ -113,6 +113,18 @@ export class UsersService {
   }
 
   /**
+   * Update user profile (name, etc.)
+   */
+  async updateUser(userId: string, data: { name?: string }): Promise<User> {
+    const user = await this.findOne(userId);
+    if (data.name) {
+      user.name = data.name;
+      user.nameChosung = extractChosung(data.name);
+    }
+    return this.userRepo.save(user);
+  }
+
+  /**
    * When a user registers with a phone number,
    * check pending_friends for anyone waiting for this number.
    * Auto-create friend relationships.

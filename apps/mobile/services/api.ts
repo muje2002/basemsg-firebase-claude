@@ -95,6 +95,15 @@ export async function getAllUsers(): Promise<User[]> {
   return request('/users');
 }
 
+// ── Users: Profile Update ──
+
+export async function apiUpdateMe(data: { name?: string }): Promise<User> {
+  return request('/users/me', {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
 // ── Users: Phone Setup ──
 
 export async function apiSetPhone(phone: string): Promise<{ user: User; friendsAdded: number }> {

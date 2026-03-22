@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
@@ -41,5 +41,15 @@ export class UsersController {
     @Body() body: { phone: string },
   ) {
     return this.usersService.setPhone(userId, body.phone);
+  }
+
+  /** 유저 정보 수정 (이름) */
+  @Put('me')
+  @UseGuards(ClerkAuthGuard)
+  updateMe(
+    @ClerkUser() userId: string,
+    @Body() body: { name?: string },
+  ) {
+    return this.usersService.updateUser(userId, body);
   }
 }
