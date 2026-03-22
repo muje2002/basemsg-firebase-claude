@@ -32,6 +32,9 @@ yarn-error.*
 .env
 .env*.local
 
+# 민감 정보 (설정/인증/토큰)
+config_deploy.md
+
 # SQLite
 *.sqlite
 
