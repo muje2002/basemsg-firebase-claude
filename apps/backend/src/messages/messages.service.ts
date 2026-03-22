@@ -51,15 +51,17 @@ export class MessagesService {
     query: string,
     limit = 50,
   ): Promise<{ chatRoomId: string; chatRoomName: string; messages: Message[] }[]> {
-    const results = await this.messageRepo
-      .createQueryBuilder('message')
-      .innerJoin('message.chatRoom', 'room')
-      .innerJoin('room.participants', 'participant')
-      .where('participant.user_id = :userId', { userId })
-      .andWhere('LOWER(message.text) LIKE LOWER(:query)', { query: `%${query}%` })
-      .orderBy('message.created_at', 'DESC')
-      .take(limit)
-      .getMany();
+    const results = await this.messageRepo.query(
+      `SELECT m.id, m.chat_room_id AS "chatRoomId", m.sender_id AS "senderId",
+              m.text, m.type, m.file_uri AS "fileUri", m.file_name AS "fileName",
+              m.created_at AS "createdAt"
+       FROM messages m
+       INNER JOIN chat_room_participants p ON p.chat_room_id = m.chat_room_id
+       WHERE p.user_id = $1 AND LOWER(m.text) LIKE LOWER($2)
+       ORDER BY m.created_at DESC
+       LIMIT $3`,
+      [userId, `%${query}%`, limit],
+    );
 
     // Group by chatRoomId
     const grouped = new Map<string, Message[]>();
@@ -70,12 +72,13 @@ export class MessagesService {
     }
 
     // Fetch room names
+    const { ChatRoom } = await import('../chat-rooms/chat-room.entity');
     const output: { chatRoomId: string; chatRoomName: string; messages: Message[] }[] = [];
     for (const [chatRoomId, messages] of grouped) {
       const room = await this.messageRepo.manager.findOne(
-        'ChatRoom',
+        ChatRoom,
         { where: { id: chatRoomId } },
-      ) as { name: string } | null;
+      );
       output.push({
         chatRoomId,
         chatRoomName: room?.name ?? '',

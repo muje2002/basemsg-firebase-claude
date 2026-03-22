@@ -27,7 +27,7 @@ export class UsersController {
   @Post('sync')
   @UseGuards(ClerkAuthGuard)
   syncUser(
-    @ClerkUser() clerkId: string,
+    @ClerkUser('clerkId') clerkId: string,
     @Body() body: { name: string; phone: string },
   ) {
     return this.usersService.findOrCreateByClerk(clerkId, body.name, body.phone);
