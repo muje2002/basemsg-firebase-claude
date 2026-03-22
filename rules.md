@@ -88,10 +88,30 @@ GitHub 반영(push/PR) 시 GitHub Actions (`ci.yml`)가 자동 실행:
 
 ## 테스트 정책
 
-### 3계층 테스트 구조
-- **Layer 1 (Unit):** 모듈별 독립 단위 테스트, 외부 의존성 전부 mock
-- **Layer 2 (Feature):** 다수 모듈 연동 테스트
-- **Layer 3 (Scenario):** 사용자 여정 E2E 테스트 — 시나리오는 AI가 최대한 많이 만들 것 (Maestro 연동 시에도)
+### 4계층 테스트 구조
+
+| Layer | 도구 | 검증 대상 | 실행 환경 |
+|-------|------|----------|----------|
+| **Layer 1 (Unit)** | Jest | 개별 함수/모듈 로직 | CI (Node.js) |
+| **Layer 2 (Feature)** | Jest | 다수 모듈 연동 | CI (Node.js) |
+| **Layer 3 (API E2E)** | Jest + Supertest | API 전체 플로우, 데이터 영속성 | CI (SQLite in-memory) |
+| **Layer 4 (UI E2E)** | Maestro | 실제 앱 화면, UX, 시각적 결과 | Android 에뮬레이터 |
+
+- Layer 1-3: 외부 의존성 mock, 독립 실행 가능
+- Layer 4: 실제 앱에서 화면 터치/입력/검증 (Maestro YAML)
+- 시나리오는 AI가 최대한 많이 만들 것
+
+### Layer 3 필수 시나리오 (API E2E)
+- 메시지 전송 → 채팅방 퇴장 → 재입장 → 메시지 조회 (영속성 검증)
+- 이미지/파일 메시지 전송 → 조회 시 fileUri 포함 여부
+- 친구 추가 → 채팅방 생성 → 메시지 교환 → 전체 여정
+
+### Layer 4 필수 시나리오 (Maestro UI E2E)
+- 로그인 → 전화번호 설정 → 메인 진입
+- 채팅방 진입 → 메시지 전송 → 나가기 → 재진입 → 메시지 존재 확인
+- 메시지 입력 시 키보드에 입력창이 가려지지 않는지
+- 사진 첨부 → 채팅방에서 미리보기 표시 확인
+- 친구 추가 → 초성 검색 → 삭제
 
 ### 테스트 입력 카테고리 (모든 테스트에 필수 적용)
 1. **정상 입력** — Happy Path
@@ -101,9 +121,14 @@ GitHub 반영(push/PR) 시 GitHub Actions (`ci.yml`)가 자동 실행:
 5. **랜덤 입력** — @faker-js/faker 사용, seed 고정, 최소 3회 반복
 6. **동시성** — Promise.all 동시 호출
 
+### 에러 모니터링 (상시)
+- **Sentry:** 런타임 JS 에러, API 호출 실패 자동 수집
+- **백엔드 Docker 로그:** `ssh → docker logs basemsg-backend`
+- **Metro 로그:** 개발 중 번들링/런타임 에러
+
 ### 테스트 디렉토리
 - 모든 모듈은 `__tests__/` 디렉토리에 자체 단위 테스트 포함
-- 외부 의존성은 전부 mock 처리하여 독립 실행 가능
+- Maestro 테스트: 프로젝트 루트 `maestro/` 디렉토리에 YAML 파일
 
 ---
 

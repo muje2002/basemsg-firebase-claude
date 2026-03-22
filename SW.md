@@ -340,7 +340,17 @@ Border Radius: sm(8), md(12), lg(16), xl(24), full(9999)
 
 ## 8. 테스트 구성
 
-### 현황 (Total: 173)
+### 4계층 테스트 체계
+
+| Layer | 도구 | 검증 대상 | 실행 환경 |
+|-------|------|----------|----------|
+| Layer 1 (Unit) | Jest | 개별 함수/모듈 로직 | CI |
+| Layer 2 (Feature) | Jest | 다수 모듈 연동 | CI |
+| Layer 3 (API E2E) | Jest + Supertest | API 전체 플로우, 데이터 영속성 | CI |
+| Layer 4 (UI E2E) | Maestro | 실제 앱 화면, UX, 시각적 결과 | Android 에뮬레이터 |
+| 런타임 | Sentry | 프로덕션 에러 | 실제 디바이스 |
+
+### 현황
 | 영역 | 개수 |
 |------|------|
 | Backend Unit (Layer 1) | 88 |
@@ -348,32 +358,48 @@ Border Radius: sm(8), md(12), lg(16), xl(24), full(9999)
 | Backend E2E (Layer 3) | 10 |
 | Mobile Unit (Layer 1) | 42 |
 | Web Unit (Layer 1) | 22 |
+| Maestro UI E2E (Layer 4) | 0 (설정 예정) |
 
 ### 실행 명령
 ```bash
-# Backend
+# Layer 1-3 (Backend)
 cd apps/backend && npm test                    # Unit
 cd apps/backend && npx jest test/feature/      # Feature
 cd apps/backend && npx jest test/e2e/          # E2E
 
-# Mobile
+# Layer 1 (Mobile/Web)
 cd apps/mobile && npm test
-
-# Web
 cd apps/web && npm test
+
+# Layer 4 (Maestro UI E2E)
+maestro test maestro/
+```
+
+### Maestro 테스트 디렉토리
+```
+maestro/
+├── 01_login_and_setup.yaml      # 로그인 → 전화번호 설정 → 메인 진입
+├── 02_message_persistence.yaml  # 메시지 전송 → 퇴장 → 재입장 → 메시지 존재
+├── 03_keyboard_visibility.yaml  # 키보드 표시 시 입력창 가림 여부
+├── 04_image_preview.yaml        # 사진 첨부 → 미리보기 표시
+└── 05_friend_management.yaml    # 친구 추가 → 초성 검색 → 삭제
 ```
 
 ### CI/CD 파이프라인
 ```
 push/PR to main →
-  test-backend (Unit → Feature → E2E)
-  test-mobile (Unit)
-  test-web (Unit)
+  Layer 1-2: Jest Unit/Feature (빠름)
+  Layer 3: Jest API E2E (중간)
+  Mobile/Web Unit tests
     ↓ 모든 테스트 통과
-  build (nest build + vite build)
+  Build (nest build + vite build)
+    ↓ 통과
+  Layer 4: Maestro UI E2E (에뮬레이터, 향후 추가)
     ↓ main push only
-  deploy-backend (SSH → OCI → docker compose up)
-  deploy-web (Cloudflare Pages webhook)
+  Deploy Backend (SSH → OCI → docker compose up)
+  Deploy Web (Cloudflare Pages webhook)
+    ↓
+  Sentry 런타임 모니터링 (상시)
 ```
 
 ### Dockerfile (Backend)
