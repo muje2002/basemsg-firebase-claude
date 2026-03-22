@@ -22,6 +22,16 @@ export class FriendsController {
     return this.friendsService.getFriends(userId);
   }
 
+  /** 연락처 동기화 — 매칭된 유저는 친구 추가, 미가입자는 pending 저장 */
+  @Post('sync-contacts')
+  syncContacts(
+    @ClerkUser() userId: string,
+    @Body() body: { contacts: Array<{ phone: string; name: string }> },
+  ) {
+    return this.friendsService.syncContacts(userId, body.contacts);
+  }
+
+  /** @deprecated Use sync-contacts instead */
   @Post('by-phones')
   addFriendsByPhones(
     @ClerkUser() userId: string,

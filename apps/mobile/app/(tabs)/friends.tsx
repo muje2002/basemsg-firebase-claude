@@ -63,12 +63,14 @@ export default function FriendsScreen() {
   useEffect(() => {
     if (searchQuery) {
       const lower = searchQuery.toLowerCase();
+      const isChosung = /^[ㄱ-ㅎ]+$/.test(searchQuery);
       setFilteredFriends(
-        friends.filter(
-          (f) =>
-            f.name.toLowerCase().includes(lower) ||
-            f.phone.includes(searchQuery)
-        )
+        friends.filter((f) => {
+          if (isChosung) {
+            return extractChosung(f.name).includes(searchQuery);
+          }
+          return f.name.toLowerCase().includes(lower) || f.phone.includes(searchQuery);
+        })
       );
     } else {
       setFilteredFriends(friends);
@@ -247,3 +249,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
 });
+
+const CHOSUNG = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+function extractChosung(str: string): string {
+  return [...str].map((ch) => {
+    const code = ch.charCodeAt(0) - 0xac00;
+    if (code < 0 || code > 11171) return ch;
+    return CHOSUNG[Math.floor(code / 588)];
+  }).join('');
+}

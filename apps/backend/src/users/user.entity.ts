@@ -19,8 +19,14 @@ export class User {
   @Column({ length: 100 })
   name!: string;
 
-  @Column({ length: 20, unique: true })
-  phone!: string;
+  @Column({ length: 20, nullable: true })
+  phone?: string;
+
+  @Column({ name: 'phone_verified', default: false })
+  phoneVerified!: boolean;
+
+  @Column({ name: 'name_chosung', length: 100, nullable: true })
+  nameChosung?: string;
 
   @Column({ name: 'avatar_url', nullable: true })
   avatarUrl?: string;

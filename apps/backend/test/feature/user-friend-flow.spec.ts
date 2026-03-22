@@ -5,6 +5,8 @@ import { UsersService } from '../../src/users/users.service';
 import { FriendsService } from '../../src/friends/friends.service';
 import { User } from '../../src/users/user.entity';
 import { Friend } from '../../src/friends/friend.entity';
+import { PendingFriend } from '../../src/friends/pending-friend.entity';
+import { ContactUpload } from '../../src/friends/contact-upload.entity';
 
 /**
  * Layer 2 Feature Test: User Registration → Friend Management flow
@@ -91,6 +93,24 @@ describe('Feature: User → Friend flow', () => {
         FriendsService,
         { provide: getRepositoryToken(User), useValue: mockUserRepo },
         { provide: getRepositoryToken(Friend), useValue: mockFriendRepo },
+        { provide: getRepositoryToken(PendingFriend), useValue: {
+          find: jest.fn().mockResolvedValue([]),
+          delete: jest.fn(),
+          createQueryBuilder: jest.fn().mockReturnValue({
+            insert: jest.fn().mockReturnThis(),
+            values: jest.fn().mockReturnThis(),
+            orIgnore: jest.fn().mockReturnThis(),
+            execute: jest.fn(),
+          }),
+        }},
+        { provide: getRepositoryToken(ContactUpload), useValue: {
+          createQueryBuilder: jest.fn().mockReturnValue({
+            insert: jest.fn().mockReturnThis(),
+            values: jest.fn().mockReturnThis(),
+            orIgnore: jest.fn().mockReturnThis(),
+            execute: jest.fn(),
+          }),
+        }},
       ],
     }).compile();
 

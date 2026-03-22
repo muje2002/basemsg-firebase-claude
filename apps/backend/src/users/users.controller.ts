@@ -32,4 +32,14 @@ export class UsersController {
   ) {
     return this.usersService.findOrCreateByClerk(clerkId, body.name, body.phone);
   }
+
+  /** 가입 후 전화번호 설정 */
+  @Post('set-phone')
+  @UseGuards(ClerkAuthGuard)
+  setPhone(
+    @ClerkUser() userId: string,
+    @Body() body: { phone: string },
+  ) {
+    return this.usersService.setPhone(userId, body.phone);
+  }
 }

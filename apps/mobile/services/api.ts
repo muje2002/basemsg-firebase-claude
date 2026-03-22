@@ -90,6 +90,15 @@ export async function getAllUsers(): Promise<User[]> {
   return request('/users');
 }
 
+// ── Users: Phone Setup ──
+
+export async function apiSetPhone(phone: string): Promise<{ user: User; friendsAdded: number }> {
+  return request('/users/set-phone', {
+    method: 'POST',
+    body: JSON.stringify({ phone }),
+  });
+}
+
 // ── Friends ──
 
 export async function apiFetchFriends(): Promise<Friend[]> {
@@ -107,6 +116,16 @@ export async function apiRemoveFriend(friendId: string): Promise<void> {
   return request(withUserId(`/friends/${friendId}`), { method: 'DELETE' });
 }
 
+export async function apiSyncContacts(
+  contacts: Array<{ phone: string; name: string }>,
+): Promise<{ added: Array<{ id: string; name: string; phone: string }>; alreadyFriends: number; pending: number; total: number }> {
+  return request('/friends/sync-contacts', {
+    method: 'POST',
+    body: JSON.stringify({ contacts }),
+  });
+}
+
+/** @deprecated Use apiSyncContacts instead */
 export async function apiAddFriendsByPhones(
   phones: string[],
 ): Promise<{ added: Array<{ id: string; name: string; phone: string }>; notFound: string[] }> {

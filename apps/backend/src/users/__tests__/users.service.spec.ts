@@ -4,6 +4,8 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import { faker } from '@faker-js/faker';
 import { UsersService } from '../users.service';
 import { User } from '../user.entity';
+import { PendingFriend } from '../../friends/pending-friend.entity';
+import { Friend } from '../../friends/friend.entity';
 
 faker.seed(42);
 
@@ -12,6 +14,22 @@ const mockUserRepo = () => ({
   save: jest.fn(),
   find: jest.fn(),
   findOne: jest.fn(),
+});
+
+const mockPendingFriendRepo = () => ({
+  find: jest.fn().mockResolvedValue([]),
+  delete: jest.fn(),
+  createQueryBuilder: jest.fn().mockReturnValue({
+    insert: jest.fn().mockReturnThis(),
+    values: jest.fn().mockReturnThis(),
+    orIgnore: jest.fn().mockReturnThis(),
+    execute: jest.fn(),
+  }),
+});
+
+const mockFriendRepo = () => ({
+  findOne: jest.fn().mockResolvedValue(null),
+  save: jest.fn(),
 });
 
 describe('UsersService', () => {
@@ -23,6 +41,8 @@ describe('UsersService', () => {
       providers: [
         UsersService,
         { provide: getRepositoryToken(User), useFactory: mockUserRepo },
+        { provide: getRepositoryToken(PendingFriend), useFactory: mockPendingFriendRepo },
+        { provide: getRepositoryToken(Friend), useFactory: mockFriendRepo },
       ],
     }).compile();
 
@@ -34,7 +54,7 @@ describe('UsersService', () => {
   describe('create - happy path', () => {
     it('should create a user with valid input', async () => {
       const dto = { name: '김민수', phone: '010-1234-5678' };
-      const user = { id: 'uuid-1', ...dto, createdAt: new Date() };
+      const user = { id: 'uuid-1', ...dto, nameChosung: 'ㄱㅁㅅ', createdAt: new Date() };
 
       repo.findOne.mockResolvedValue(null);
       repo.create.mockReturnValue(user);
