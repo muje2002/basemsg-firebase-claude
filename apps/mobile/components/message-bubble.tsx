@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { Image, StyleSheet, View } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/themed-text';
 import { Colors, BorderRadius, Spacing } from '@/constants/theme';
@@ -40,7 +40,19 @@ export function MessageBubble({ message, isOwn }: MessageBubbleProps) {
           isEmoji && styles.emojiBubble,
         ]}
       >
-        {isAttachment && typeInfo && (
+        {message.type === 'image' && message.fileUri && (
+          <Image
+            source={{ uri: message.fileUri }}
+            style={styles.imagePreview}
+            resizeMode="cover"
+          />
+        )}
+        {message.type === 'video' && message.fileUri && (
+          <View style={styles.videoPreview}>
+            <MaterialIcons name="play-circle-outline" size={40} color="#FFFFFF" />
+          </View>
+        )}
+        {isAttachment && typeInfo && message.type !== 'image' && (
           <View style={styles.attachmentRow}>
             <MaterialIcons name={typeInfo.icon} size={18} color={colors.primary} />
             <ThemedText style={[styles.attachmentLabel, { color: colors.primary }]}>
@@ -99,6 +111,21 @@ const styles = StyleSheet.create({
   emojiText: {
     fontSize: 40,
     lineHeight: 48,
+  },
+  imagePreview: {
+    width: 200,
+    height: 200,
+    borderRadius: BorderRadius.md,
+    marginBottom: 4,
+  },
+  videoPreview: {
+    width: 200,
+    height: 150,
+    borderRadius: BorderRadius.md,
+    marginBottom: 4,
+    backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   attachmentRow: {
     flexDirection: 'row',

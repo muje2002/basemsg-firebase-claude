@@ -154,6 +154,34 @@ describe('E2E: Full User Journey', () => {
     expect(res.body).toHaveLength(3);
   });
 
+  it('Step 4b: Messages persist after re-fetching (re-entry)', async () => {
+    // Simulate leaving and re-entering: just fetch messages again
+    const res = await request(server)
+      .get(`/api/chat-rooms/${roomId}/messages`)
+      .expect(200);
+
+    // All 3 messages should still exist
+    expect(res.body).toHaveLength(3);
+    expect(res.body.some((m: any) => m.text === '안녕하세요 팀!')).toBe(true);
+    expect(res.body.some((m: any) => m.text === '반갑습니다!')).toBe(true);
+  });
+
+  it('Step 4c: Image message has fileUri in response', async () => {
+    await request(server)
+      .post(`/api/chat-rooms/${roomId}/messages?userId=${aliceId}`)
+      .send({ text: '사진', type: 'image', fileUri: 'file:///test/photo.jpg', fileName: 'photo.jpg' })
+      .expect(201);
+
+    const res = await request(server)
+      .get(`/api/chat-rooms/${roomId}/messages`)
+      .expect(200);
+
+    const imgMsg = res.body.find((m: any) => m.type === 'image');
+    expect(imgMsg).toBeDefined();
+    expect(imgMsg.fileUri).toBe('file:///test/photo.jpg');
+    expect(imgMsg.fileName).toBe('photo.jpg');
+  });
+
   it('Step 5: Retrieve chat rooms for user', async () => {
     const res = await request(server)
       .get(`/api/chat-rooms?userId=${aliceId}`)

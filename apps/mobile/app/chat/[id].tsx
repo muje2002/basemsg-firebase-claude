@@ -22,7 +22,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Colors, BorderRadius, Spacing } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { getMessages, saveMessage, getChatRooms } from '@/services/database';
-import { apiFetchMessages, getCurrentUserId } from '@/services/api';
+import { apiFetchMessages, apiSendMessage, getCurrentUserId } from '@/services/api';
 import { joinRoom, leaveRoom, onNewMessage, sendMessage as socketSend } from '@/services/socket';
 import type { Message } from '@basemsg/shared';
 
@@ -124,6 +124,15 @@ export default function ChatRoomScreen() {
     setMessages((prev) => [...prev, newMessage]);
     await saveMessage(newMessage);
 
+    // Save to backend via REST API (persistence)
+    try {
+      const saved = await apiSendMessage(id, { text, type: 'text' });
+      // Update local message with server-assigned ID
+      setMessages((prev) => prev.map((m) => m.id === newMessage.id ? { ...m, id: saved.id } : m));
+    } catch (e) {
+      console.log('[Chat] API send failed, falling back to socket:', e);
+    }
+
     // Send via socket for real-time broadcast
     socketSend(newMessage);
 
@@ -208,6 +217,15 @@ export default function ChatRoomScreen() {
     };
     setMessages((prev) => [...prev, msg]);
     await saveMessage(msg);
+
+    // Save to backend via REST API (persistence)
+    try {
+      const saved = await apiSendMessage(id, { text: msg.text, type, fileUri: uri, fileName: name });
+      setMessages((prev) => prev.map((m) => m.id === msg.id ? { ...m, id: saved.id } : m));
+    } catch (e) {
+      console.log('[Chat] API attachment send failed:', e);
+    }
+
     socketSend(msg);
     setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
   };
@@ -215,8 +233,8 @@ export default function ChatRoomScreen() {
   return (
     <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: colors.background }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={0}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
     >
       {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border, paddingTop: insets.top }]}>
