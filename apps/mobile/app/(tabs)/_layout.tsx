@@ -19,11 +19,7 @@ export default function TabLayout() {
           backgroundColor: colors.background,
           borderTopColor: colors.border,
         },
-        headerStyle: {
-          backgroundColor: colors.background,
-        },
-        headerTintColor: colors.text,
-        headerShadowVisible: false,
+        headerShown: false,
         tabBarButton: HapticTab,
       }}>
       <Tabs.Screen
@@ -41,6 +37,15 @@ export default function TabLayout() {
           title: '친구',
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="people-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: '설정',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialIcons name="settings" size={size} color={color} />
           ),
         }}
       />

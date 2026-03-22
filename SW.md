@@ -300,14 +300,19 @@ Login (Clerk 인증: 이메일/비밀번호, 이메일 인증 코드)
   ↓
 Setup Phone (전화번호 입력 — phone 없는 경우만)
   ↓
-Bottom Tabs (2탭)
+Bottom Tabs (3탭, 화면전환 애니메이션 없음)
 ├── 채팅 탭 (index.tsx)
 │   ├── 채팅방 목록 + 검색바
-│   ├── → [+] → new-chat.tsx (Modal: 친구 선택, 방 이름)
+│   ├── → [+] → new-chat.tsx (친구 선택, 방 이름)
 │   └── → 채팅방 터치 → chat/[id].tsx (메시지, 이모지, 파일첨부)
-└── 친구 탭 (friends.tsx)
-    ├── 친구 목록 + 검색 + 다중 선택 삭제
-    └── → [+] → add-friend.tsx (Modal: 연락처 동기화)
+├── 친구 탭 (friends.tsx)
+│   ├── 친구 목록 + 검색 (초성 검색 지원) + 다중 선택 삭제
+│   └── → [+] → add-friend.tsx (연락처 동기화)
+└── 설정 탭 (settings.tsx)
+    ├── 내 정보 (이름, 이메일, 전화번호)
+    ├── 알림 설정 (토글)
+    ├── 앱 정보 (버전 1.0.0)
+    └── 로그아웃
 ```
 
 ### Web (React)
@@ -315,8 +320,8 @@ Bottom Tabs (2탭)
 Login (Clerk SignIn/SignUp)
   ↓
 3-Panel Layout
-├── Sidebar (좌측 고정) — 채팅/친구 탭 전환
-├── Panel (400px) — ChatList 또는 FriendsList
+├── Sidebar (좌측 고정) — 채팅/친구/설정 탭 전환
+├── Panel (400px) — ChatList / FriendsList / Settings
 └── Main (flex) — /chat/:id → ChatRoom
 ```
 

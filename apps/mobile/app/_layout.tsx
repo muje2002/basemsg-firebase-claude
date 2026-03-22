@@ -64,7 +64,8 @@ function RootLayoutNav() {
         const backendUser = await syncUserToBackend();
         setCurrentUserId(backendUser.id);
         connectSocket(backendUser.id);
-        const hasPhone = !!backendUser.phone && backendUser.phone !== '';
+        const hasPhone = !!backendUser.phone && backendUser.phone.trim() !== '';
+        console.log('[Layout] Sync result:', backendUser.id, 'phone:', JSON.stringify(backendUser.phone), 'hasPhone:', hasPhone);
         setNeedsPhone(!hasPhone);
         onPhoneSet(() => setNeedsPhone(false));
         setIsSynced(true);
@@ -114,28 +115,11 @@ function RootLayoutNav() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="login" options={{ animation: 'none' }} />
         <Stack.Screen name="setup-phone" options={{ animation: 'none' }} />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen
-          name="chat/[id]"
-          options={{
-            animation: 'slide_from_right',
-          }}
-        />
-        <Stack.Screen
-          name="new-chat"
-          options={{
-            presentation: 'modal',
-            animation: 'slide_from_bottom',
-          }}
-        />
-        <Stack.Screen
-          name="add-friend"
-          options={{
-            presentation: 'modal',
-            animation: 'slide_from_bottom',
-          }}
-        />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+        <Stack.Screen name="(tabs)" options={{ animation: 'none' }} />
+        <Stack.Screen name="chat/[id]" options={{ animation: 'none' }} />
+        <Stack.Screen name="new-chat" options={{ animation: 'none' }} />
+        <Stack.Screen name="add-friend" options={{ animation: 'none' }} />
+        <Stack.Screen name="modal" options={{ animation: 'none' }} />
       </Stack>
       <StatusBar style="dark" />
     </ThemeProvider>

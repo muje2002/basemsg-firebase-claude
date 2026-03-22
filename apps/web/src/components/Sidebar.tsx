@@ -1,6 +1,6 @@
 interface SidebarProps {
-  activeTab: 'chats' | 'friends';
-  onTabChange: (tab: 'chats' | 'friends') => void;
+  activeTab: 'chats' | 'friends' | 'settings';
+  onTabChange: (tab: 'chats' | 'friends' | 'settings') => void;
 }
 
 export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
@@ -19,6 +19,13 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
         title="친구"
       >
         👥
+      </button>
+      <button
+        className={`sidebar-tab ${activeTab === 'settings' ? 'active' : ''}`}
+        onClick={() => onTabChange('settings')}
+        title="설정"
+      >
+        ⚙️
       </button>
     </nav>
   );

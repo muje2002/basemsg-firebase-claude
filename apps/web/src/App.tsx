@@ -5,13 +5,14 @@ import { Sidebar } from './components/Sidebar';
 import { ChatList } from './components/ChatList';
 import { ChatRoom } from './components/ChatRoom';
 import { FriendsList } from './components/FriendsList';
+import { Settings } from './components/Settings';
 import { Login } from './pages/Login';
 import { setCurrentUserId, setTokenGetter, syncUser } from './services/api';
 import { connectSocket } from './services/socket';
 import './styles/app.css';
 
 export function App() {
-  const [activeTab, setActiveTab] = useState<'chats' | 'friends'>('chats');
+  const [activeTab, setActiveTab] = useState<'chats' | 'friends' | 'settings'>('chats');
   const { isLoaded, isSignedIn, getToken } = useAuth();
   const { user } = useUser();
   const [isSynced, setIsSynced] = useState(false);
@@ -67,6 +68,7 @@ export function App() {
       <div className="panel">
         {activeTab === 'chats' && <ChatList />}
         {activeTab === 'friends' && <FriendsList />}
+        {activeTab === 'settings' && <Settings />}
       </div>
       <div className="main">
         <Routes>
