@@ -16,7 +16,7 @@ import { SearchBar } from '@/components/search-bar';
 import { ThemedText } from '@/components/themed-text';
 import { Colors, BorderRadius, Spacing } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { apiAddFriendsByPhones } from '@/services/api';
+import { apiSyncContacts } from '@/services/api';
 
 interface ContactEntry {
   id: string;
@@ -76,12 +76,14 @@ export default function AddFriendScreen() {
   useEffect(() => {
     if (searchQuery) {
       const lower = searchQuery.toLowerCase();
+      const isChosung = /^[ㄱ-ㅎ]+$/.test(searchQuery);
       setFilteredContacts(
-        contacts.filter(
-          (c) =>
-            c.name.toLowerCase().includes(lower) ||
-            c.phone.includes(searchQuery)
-        )
+        contacts.filter((c) => {
+          if (isChosung) {
+            return extractChosung(c.name).includes(searchQuery);
+          }
+          return c.name.toLowerCase().includes(lower) || c.phone.includes(searchQuery);
+        })
       );
     } else {
       setFilteredContacts(contacts);
@@ -116,16 +118,29 @@ export default function AddFriendScreen() {
 
     setSubmitting(true);
     try {
-      const result = await apiAddFriendsByPhones(Array.from(selectedPhones));
-      const addedCount = result.added.length;
-      const notFoundCount = result.notFound.length;
+      // Build contacts list from selected phones
+      const selectedContacts = contacts
+        .filter((c) => selectedPhones.has(c.phone))
+        .map((c) => ({ phone: c.phone, name: c.name }));
 
-      let message = `${addedCount}명의 친구가 추가되었습니다.`;
-      if (notFoundCount > 0) {
-        message += `\n${notFoundCount}명은 아직 가입하지 않았습니다.`;
+      const result = await apiSyncContacts(selectedContacts);
+      const addedCount = result.added.length;
+
+      let message = '';
+      if (addedCount > 0) {
+        message += `${addedCount}명의 친구가 추가되었습니다.`;
+      }
+      if (result.alreadyFriends > 0) {
+        message += `\n${result.alreadyFriends}명은 이미 친구입니다.`;
+      }
+      if (result.pending > 0) {
+        message += `\n${result.pending}명은 아직 미가입 — 가입하면 자동으로 친구가 됩니다.`;
+      }
+      if (!message) {
+        message = '변경사항이 없습니다.';
       }
 
-      Alert.alert('완료', message);
+      Alert.alert('완료', message.trim());
       router.back();
     } catch (err) {
       Alert.alert('오류', '친구 추가에 실패했습니다.');
@@ -239,16 +254,23 @@ export default function AddFriendScreen() {
 }
 
 function normalizePhone(phone: string): string {
-  // Remove spaces, dashes, parentheses, country code prefix
   let cleaned = phone.replace(/[\s\-()]/g, '');
   if (cleaned.startsWith('+82')) {
     cleaned = '0' + cleaned.slice(3);
   }
-  // Format as 010-XXXX-XXXX if it's 11 digits starting with 0
   if (cleaned.length === 11 && cleaned.startsWith('0')) {
     return `${cleaned.slice(0, 3)}-${cleaned.slice(3, 7)}-${cleaned.slice(7)}`;
   }
   return phone;
+}
+
+const CHOSUNG = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+function extractChosung(str: string): string {
+  return [...str].map((ch) => {
+    const code = ch.charCodeAt(0) - 0xac00;
+    if (code < 0 || code > 11171) return ch;
+    return CHOSUNG[Math.floor(code / 588)];
+  }).join('');
 }
 
 const styles = StyleSheet.create({

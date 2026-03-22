@@ -8,6 +8,8 @@ import {
 import { faker } from '@faker-js/faker';
 import { FriendsService } from '../friends.service';
 import { Friend } from '../friend.entity';
+import { ContactUpload } from '../contact-upload.entity';
+import { PendingFriend } from '../pending-friend.entity';
 import { User } from '../../users/user.entity';
 
 faker.seed(42);
@@ -24,6 +26,24 @@ const mockUserRepo = () => ({
   findOne: jest.fn(),
 });
 
+const mockContactUploadRepo = () => ({
+  createQueryBuilder: jest.fn().mockReturnValue({
+    insert: jest.fn().mockReturnThis(),
+    values: jest.fn().mockReturnThis(),
+    orIgnore: jest.fn().mockReturnThis(),
+    execute: jest.fn(),
+  }),
+});
+
+const mockPendingFriendRepo = () => ({
+  createQueryBuilder: jest.fn().mockReturnValue({
+    insert: jest.fn().mockReturnThis(),
+    values: jest.fn().mockReturnThis(),
+    orIgnore: jest.fn().mockReturnThis(),
+    execute: jest.fn(),
+  }),
+});
+
 describe('FriendsService', () => {
   let service: FriendsService;
   let friendRepo: ReturnType<typeof mockFriendRepo>;
@@ -35,6 +55,8 @@ describe('FriendsService', () => {
         FriendsService,
         { provide: getRepositoryToken(Friend), useFactory: mockFriendRepo },
         { provide: getRepositoryToken(User), useFactory: mockUserRepo },
+        { provide: getRepositoryToken(ContactUpload), useFactory: mockContactUploadRepo },
+        { provide: getRepositoryToken(PendingFriend), useFactory: mockPendingFriendRepo },
       ],
     }).compile();
 
@@ -86,6 +108,29 @@ describe('FriendsService', () => {
       friendRepo.delete.mockResolvedValue({ affected: 1 });
 
       await expect(service.removeFriend('a', 'b')).resolves.toBeUndefined();
+    });
+  });
+
+  describe('syncContacts - happy path', () => {
+    it('should add matched users as friends and store pending for unmatched', async () => {
+      const userA = makeUser('a', 'UserA');
+      const userB = makeUser('b', 'UserB');
+
+      userRepo.findOne.mockImplementation(({ where }: any) => {
+        if (where.id === 'a') return userA;
+        if (where.phone === '01011112222') return userB;
+        return null;
+      });
+      friendRepo.findOne.mockResolvedValue(null);
+      friendRepo.save.mockResolvedValue({});
+
+      const result = await service.syncContacts('a', [
+        { phone: '010-1111-2222', name: 'B' },
+        { phone: '010-9999-8888', name: 'Unknown' },
+      ]);
+
+      expect(result.added).toHaveLength(1);
+      expect(result.pending).toBe(1);
     });
   });
 

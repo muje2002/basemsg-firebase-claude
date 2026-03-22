@@ -11,6 +11,8 @@ import { AuthModule } from '../../src/auth/auth.module';
 import { ClerkAuthGuard } from '../../src/auth/clerk-auth.guard';
 import { User } from '../../src/users/user.entity';
 import { Friend } from '../../src/friends/friend.entity';
+import { ContactUpload } from '../../src/friends/contact-upload.entity';
+import { PendingFriend } from '../../src/friends/pending-friend.entity';
 import { ChatRoom } from '../../src/chat-rooms/chat-room.entity';
 import { ChatRoomParticipant } from '../../src/chat-rooms/chat-room-participant.entity';
 import { Message } from '../../src/messages/message.entity';
@@ -46,7 +48,7 @@ describe('E2E: Full User Journey', () => {
         TypeOrmModule.forRoot({
           type: 'better-sqlite3',
           database: ':memory:',
-          entities: [User, Friend, ChatRoom, ChatRoomParticipant, Message],
+          entities: [User, Friend, ContactUpload, PendingFriend, ChatRoom, ChatRoomParticipant, Message],
           synchronize: true,
           dropSchema: true,
         }),

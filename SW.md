@@ -127,7 +127,7 @@ src/
 
 #### Shared (packages/shared/src/)
 ```typescript
-interface User { id, name, phone, avatarUrl?, createdAt }
+interface User { id, name, phone?, phoneVerified?, nameChosung?, avatarUrl?, createdAt }
 interface Friend { id, userId, name, phone, avatarUrl?, addedAt }
 interface ChatRoom { id, name, participants, lastMessage?, lastMessageAt?, unreadCount, createdAt }
 interface Message { id, chatRoomId, senderId, text, type('text'|'image'|'file'|'video'|'emoji'), fileUri?, fileName?, createdAt }
@@ -157,20 +157,22 @@ interface Message { id, chatRoomId, senderId, text, type('text'|'image'|'file'|'
 
 ## 4. Backend API 스펙
 
-### Users (Public: POST/GET, Protected: POST /users/sync)
+### Users (Public: POST/GET, Protected: POST /users/sync, POST /users/set-phone)
 | Method | Route | Guard | 설명 |
 |--------|-------|-------|------|
 | POST | `/api/users` | - | 사용자 등록 (name, phone) |
 | GET | `/api/users` | - | 전체 사용자 목록 |
 | GET | `/api/users/:id` | - | 사용자 조회 |
 | POST | `/api/users/sync` | ClerkAuthGuard | Clerk 로그인 후 사용자 동기화 |
+| POST | `/api/users/set-phone` | ClerkAuthGuard | 가입 후 전화번호 설정 → pending 친구 자동 해소 |
 
 ### Friends (All Protected: ClerkAuthGuard)
 | Method | Route | 설명 |
 |--------|-------|------|
 | POST | `/api/friends` | 친구 추가 (friendId) |
 | GET | `/api/friends` | 내 친구 목록 |
-| POST | `/api/friends/by-phones` | 전화번호 배열로 친구 일괄 추가 |
+| POST | `/api/friends/sync-contacts` | 연락처 동기화 (매칭→친구추가, 미매칭→pending) |
+| POST | `/api/friends/by-phones` | ~~(deprecated)~~ 전화번호로 친구 추가 |
 | DELETE | `/api/friends/:friendId` | 친구 삭제 |
 
 ### Chat Rooms (All Protected: ClerkAuthGuard)
@@ -211,7 +213,9 @@ interface Message { id, chatRoomId, senderId, text, type('text'|'image'|'file'|'
 | id | UUID | PK |
 | clerk_id | VARCHAR | UNIQUE, nullable |
 | name | VARCHAR(100) | NOT NULL |
-| phone | VARCHAR(20) | UNIQUE, NOT NULL |
+| phone | VARCHAR(20) | nullable |
+| phone_verified | BOOLEAN | DEFAULT false |
+| name_chosung | VARCHAR(100) | nullable |
 | avatar_url | VARCHAR | nullable |
 | created_at | TIMESTAMP | auto |
 
@@ -223,6 +227,26 @@ interface Message { id, chatRoomId, senderId, text, type('text'|'image'|'file'|'
 | friend_id | UUID | FK→users, CASCADE |
 | added_at | TIMESTAMP | auto |
 | | | UNIQUE(user_id, friend_id) |
+
+#### contact_uploads
+| Column | Type | Constraint |
+|--------|------|------------|
+| id | UUID | PK |
+| user_id | UUID | FK→users, CASCADE |
+| phone_hash | VARCHAR(64) | NOT NULL, INDEX |
+| contact_name | VARCHAR(200) | nullable |
+| created_at | TIMESTAMP | auto |
+| | | UNIQUE(user_id, phone_hash) |
+
+#### pending_friends
+| Column | Type | Constraint |
+|--------|------|------------|
+| id | UUID | PK |
+| user_id | UUID | FK→users, CASCADE |
+| phone_hash | VARCHAR(64) | NOT NULL, INDEX |
+| contact_name | VARCHAR(200) | nullable |
+| created_at | TIMESTAMP | auto |
+| | | UNIQUE(user_id, phone_hash) |
 
 #### chat_rooms
 | Column | Type | Constraint |
@@ -274,6 +298,8 @@ interface Message { id, chatRoomId, senderId, text, type('text'|'image'|'file'|'
 ```
 Login (Clerk 인증: 이메일/비밀번호, 이메일 인증 코드)
   ↓
+Setup Phone (전화번호 입력 — phone 없는 경우만)
+  ↓
 Bottom Tabs (2탭)
 ├── 채팅 탭 (index.tsx)
 │   ├── 채팅방 목록 + 검색바
@@ -314,10 +340,10 @@ Border Radius: sm(8), md(12), lg(16), xl(24), full(9999)
 
 ## 8. 테스트 구성
 
-### 현황 (Total: 155)
+### 현황 (Total: 173)
 | 영역 | 개수 |
 |------|------|
-| Backend Unit (Layer 1) | 70 |
+| Backend Unit (Layer 1) | 88 |
 | Backend Feature (Layer 2) | 11 |
 | Backend E2E (Layer 3) | 10 |
 | Mobile Unit (Layer 1) | 42 |

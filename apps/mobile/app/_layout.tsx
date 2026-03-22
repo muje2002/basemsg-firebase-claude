@@ -37,6 +37,7 @@ function RootLayoutNav() {
   const { isLoaded, isSignedIn, getToken } = useAuth();
   const { user } = useUser();
   const [isSynced, setIsSynced] = useState(false);
+  const [needsPhone, setNeedsPhone] = useState(false);
   const router = useRouter();
   const segments = useSegments();
 
@@ -63,6 +64,7 @@ function RootLayoutNav() {
         const backendUser = await syncUserToBackend();
         setCurrentUserId(backendUser.id);
         connectSocket(backendUser.id);
+        setNeedsPhone(!backendUser.phone);
         setIsSynced(true);
       } catch (e) {
         console.error('[Layout] Sync failed:', e);
@@ -75,13 +77,18 @@ function RootLayoutNav() {
     if (!isLoaded) return;
 
     const inAuthScreen = segments[0] === 'login';
+    const inSetupPhone = segments[0] === 'setup-phone';
 
     if (!isSignedIn && !inAuthScreen) {
       router.replace('/login');
-    } else if (isSignedIn && isSynced && inAuthScreen) {
-      router.replace('/(tabs)');
+    } else if (isSignedIn && isSynced) {
+      if (needsPhone && !inSetupPhone) {
+        router.replace('/setup-phone');
+      } else if (!needsPhone && (inAuthScreen || inSetupPhone)) {
+        router.replace('/(tabs)');
+      }
     }
-  }, [isLoaded, isSignedIn, isSynced, segments, router]);
+  }, [isLoaded, isSignedIn, isSynced, needsPhone, segments, router]);
 
   const navTheme = {
     ...DefaultTheme,
@@ -104,6 +111,7 @@ function RootLayoutNav() {
     <ThemeProvider value={navTheme}>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="login" options={{ animation: 'none' }} />
+        <Stack.Screen name="setup-phone" options={{ animation: 'none' }} />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen
           name="chat/[id]"

@@ -26,8 +26,9 @@
 
 ## 다음 작업 예정
 
-- 앱 기능 테스트 및 버그 수정 (유저 테스트 진행 중)
-- MD 파일 체계 재구성 (5개 파일 구조로 변경)
+- feat/friend-sync 브랜치 → main PR & merge
+- 앱 기능 테스트 (전화번호 설정, 친구 동기화, 초성 검색)
+- SW.md 업데이트 (새 API, DB 스키마 반영)
 
 ---
 
@@ -66,6 +67,13 @@
 | 2026-03-22 | 로그인 디버깅 — Clerk needs_second_factor 해결, 에러 로깅 개선 | 완료 |
 | 2026-03-22 | Jest Sentry mock 추가 — mobile 테스트 ESM 에러 해결 | 완료 |
 | 2026-03-22 | MD 파일 체계 재구성 — 5개 파일 구조로 변경 | 완료 |
+| 2026-03-22 | 친구 동기화 시스템 구현 (feat/friend-sync) | 완료 |
+| 2026-03-22 | - phone.utils (정규화, 해시, 초성 추출) + 테스트 17개 | 완료 |
+| 2026-03-22 | - ContactUpload, PendingFriend 엔티티, User 스키마 변경 | 완료 |
+| 2026-03-22 | - POST /users/set-phone, POST /friends/sync-contacts API | 완료 |
+| 2026-03-22 | - 미가입 친구 pending → 가입 시 자동 추가 로직 | 완료 |
+| 2026-03-22 | - setup-phone.tsx 화면, 네비게이션 가드, 초성 검색 | 완료 |
+| 2026-03-22 | - 전체 테스트 173개 pass (Backend 109 + Mobile 42 + Web 22) | 완료 |
 
 ---
 
@@ -73,7 +81,7 @@
 
 | 영역 | Layer | 개수 |
 |------|-------|------|
-| Backend Unit | Layer 1 | 70 |
+| Backend Unit | Layer 1 | 88 |
 | Backend Feature | Layer 2 | 11 |
 | Backend E2E | Layer 3 | 10 |
 | Mobile Unit | Layer 1 | 42 |
