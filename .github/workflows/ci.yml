@@ -90,6 +90,8 @@ jobs:
           command_timeout: 60m
           script: |
             cd /home/ubuntu/services/basemsg
+            git checkout -- .
+            git clean -fd
             git pull origin main
 
             cd /home/ubuntu/services

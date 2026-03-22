@@ -15,6 +15,25 @@
 
 ---
 
+## "에러 발생" 시 필수 확인 절차
+
+유저가 "에러 발생"이라고 하면 아래 **모든 소스를 확인**하고, 원인 파악 후 수정할 것.
+수정 후 **해당 에러 상황을 테스트에 반드시 추가**할 것.
+
+### 확인 순서
+1. **Sentry** — `curl -s -H "Authorization: Bearer <token>" "https://sentry.io/api/0/projects/basemsg/react-native/issues/?query=is:unresolved&limit=10"`
+2. **Metro 서버 로그** — `cat "$TEMP/metro_log.txt"` (또는 실행 중인 Metro 프로세스 로그)
+3. **백엔드 서버 로그** — `ssh -i <key> ubuntu@168.107.33.103 "docker logs basemsg-backend --tail 50"`
+4. **GitHub Actions (CI/Deploy)** — GitHub API로 최근 run의 job 결과 및 로그 확인
+5. **Maestro 로그** — Maestro E2E 테스트 실행 결과 (설정된 경우)
+
+### 에러 수정 후 필수 Action
+- 에러 원인이 된 상황을 재현하는 **테스트 케이스 추가**
+- 수정 코드 + 테스트 코드 함께 커밋
+- 모든 테스트 pass 확인 후 push
+
+---
+
 ## 코드 관리 규칙
 
 ### 소규모 개발 (단일 기능, 버그 수정)
