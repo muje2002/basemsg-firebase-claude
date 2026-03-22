@@ -44,6 +44,11 @@ export function getCurrentUserId(): string {
   return currentUserId;
 }
 
+// Phone setup state — shared between _layout and setup-phone
+let phoneSetCallback: (() => void) | null = null;
+export function onPhoneSet(callback: () => void) { phoneSetCallback = callback; }
+export function notifyPhoneSet() { phoneSetCallback?.(); }
+
 async function request<T>(
   path: string,
   options: RequestInit = {},

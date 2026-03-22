@@ -13,7 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { Colors, BorderRadius, Spacing } from '@/constants/theme';
-import { apiSetPhone } from '@/services/api';
+import { apiSetPhone, notifyPhoneSet } from '@/services/api';
 
 export default function SetupPhoneScreen() {
   const [phone, setPhone] = useState('');
@@ -39,14 +39,12 @@ export default function SetupPhoneScreen() {
     setLoading(true);
     try {
       const result = await apiSetPhone(digits);
+      notifyPhoneSet();
       if (result.friendsAdded > 0) {
         Alert.alert(
           '전화번호 설정 완료',
           `${result.friendsAdded}명의 친구가 자동으로 추가되었습니다!`,
-          [{ text: 'OK', onPress: () => router.replace('/(tabs)') }],
         );
-      } else {
-        router.replace('/(tabs)');
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '전화번호 설정에 실패했습니다.';

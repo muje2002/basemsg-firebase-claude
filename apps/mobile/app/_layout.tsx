@@ -7,7 +7,7 @@ import { ClerkProvider, useAuth, useUser } from '@clerk/clerk-expo';
 import * as SecureStore from 'expo-secure-store';
 import * as Sentry from '@sentry/react-native';
 import { Colors } from '@/constants/theme';
-import { setCurrentUserId } from '@/services/api';
+import { setCurrentUserId, onPhoneSet } from '@/services/api';
 import { connectSocket } from '@/services/socket';
 import { syncUserToBackend, setAuthGetters } from '@/services/auth';
 
@@ -64,7 +64,9 @@ function RootLayoutNav() {
         const backendUser = await syncUserToBackend();
         setCurrentUserId(backendUser.id);
         connectSocket(backendUser.id);
-        setNeedsPhone(!backendUser.phone);
+        const hasPhone = !!backendUser.phone && backendUser.phone !== '';
+        setNeedsPhone(!hasPhone);
+        onPhoneSet(() => setNeedsPhone(false));
         setIsSynced(true);
       } catch (e) {
         console.error('[Layout] Sync failed:', e);
