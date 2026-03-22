@@ -34,6 +34,8 @@
 
 1. Maestro 설치 + Layer 4 UI E2E 테스트 시나리오 작성
 2. CI에 Maestro 통합
+3. Cloudflare Pages 웹 배포
+4. 이름 변경 API (PUT /api/users/:id) 구현
 
 ---
 
@@ -77,6 +79,8 @@
 | 2026-03-22 | UI 개편: 3탭 (채팅/친구/설정), 설정 화면, 화면전환 통일, 중복 헤더 제거 | 완료 |
 | 2026-03-22 | 웹 설정 패널 추가: Settings 컴포넌트, Sidebar 3탭 | 완료 |
 | 2026-03-22 | DB 정리: 잘못된 clerk_id 유저 삭제 | 완료 |
+| 2026-03-22 | 버그 수정: syncUser clerkId 혼동, 설정 전화번호 표시, searchMessages 500 에러 | 완료 |
+| 2026-03-22 | 설정 화면: 이름/전화번호 편집 기능, 백엔드 DB에서 정보 로드 | 완료 |
 | 2026-03-22 | 친구 동기화 시스템 구현 (feat/friend-sync) | 완료 |
 | 2026-03-22 | - phone.utils (정규화, 해시, 초성 추출) + 테스트 17개 | 완료 |
 | 2026-03-22 | - ContactUpload, PendingFriend 엔티티, User 스키마 변경 | 완료 |
