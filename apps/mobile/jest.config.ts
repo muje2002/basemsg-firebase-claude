@@ -11,6 +11,7 @@ const config: Config = {
     '^react-native$': '<rootDir>/__mocks__/react-native.ts',
     '^expo-constants$': '<rootDir>/__mocks__/expo-constants.ts',
     '^expo-secure-store$': '<rootDir>/__mocks__/expo-secure-store.ts',
+    '^@sentry/react-native$': '<rootDir>/__mocks__/@sentry/react-native.ts',
   },
   transform: {
     '^.+\\.ts$': 'ts-jest',
