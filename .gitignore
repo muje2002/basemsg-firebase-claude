@@ -35,6 +35,9 @@ yarn-error.*
 # 민감 정보 (설정/인증/토큰)
 config_deploy.md
 
+# 개발 대화 히스토리 (로컬 전용)
+dev_history.md
+
 # SQLite
 *.sqlite
 
