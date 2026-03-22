@@ -95,8 +95,10 @@ jobs:
             cd /home/ubuntu/services
             docker compose down basemsg-backend --remove-orphans 2>/dev/null || true
             docker rm -f basemsg-backend 2>/dev/null || true
+            docker rmi -f services-basemsg-backend 2>/dev/null || true
             docker builder prune -af 2>/dev/null || true
-            DOCKER_BUILDKIT=0 docker compose build --no-cache basemsg-backend
+            docker system prune -f 2>/dev/null || true
+            docker compose build --no-cache --pull basemsg-backend
             docker compose up -d basemsg-backend
 
   deploy-web:
