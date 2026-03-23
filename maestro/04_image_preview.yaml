@@ -1,0 +1,37 @@
+appId: com.youngkihong.basemsg
+name: "04 - Attachment Dialog"
+---
+
+# Verify attachment button shows options dialog
+
+- launchApp
+
+# Dismiss Expo dev menu if present
+- runFlow:
+    when:
+      visible: "Continue"
+    commands:
+      - tapOn: "Continue"
+
+# Wait for main screen
+- extendedWaitUntil:
+    visible: "tab-chats"
+    timeout: 60000
+
+# Enter first chat room
+- tapOn:
+    point: "50%,30%"
+- extendedWaitUntil:
+    visible: "chat-message-input"
+    timeout: 10000
+
+# Tap attachment button
+- tapOn: "chat-attach-btn"
+
+# Verify attachment dialog appears (Android Alert)
+- extendedWaitUntil:
+    visible: "사진 선택|Photo"
+    timeout: 5000
+
+# Dismiss dialog
+- pressKey: back

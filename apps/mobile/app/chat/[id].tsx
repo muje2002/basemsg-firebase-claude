@@ -33,6 +33,7 @@ export default function ChatRoomScreen() {
   const [roomName, setRoomName] = useState('');
   const [showEmoji, setShowEmoji] = useState(false);
   const flatListRef = useRef<FlatList>(null);
+  const sendingRef = useRef(false);
   const router = useRouter();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme];
@@ -45,6 +46,20 @@ export default function ChatRoomScreen() {
     currentUserId = 'user-1';
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mapServerMessages = useCallback((serverMsgs: any[]): Message[] => {
+    return serverMsgs.map((m) => ({
+      id: m.id,
+      chatRoomId: m.chatRoomId ?? id,
+      senderId: m.senderId ?? m.sender?.id ?? '',
+      text: m.text,
+      type: m.type ?? 'text',
+      fileUri: m.fileUri,
+      fileName: m.fileName,
+      createdAt: typeof m.createdAt === 'string' ? m.createdAt : new Date(m.createdAt).toISOString(),
+    }));
+  }, [id]);
+
   const loadMessages = useCallback(async () => {
     if (!id) return;
 
@@ -53,32 +68,19 @@ export default function ChatRoomScreen() {
     const room = rooms.find((r) => r.id === id);
     if (room) setRoomName(room.name);
 
-    // Try to fetch from backend first
+    // Show cached messages immediately (local-first)
+    const cached = await getMessages(id);
+    if (cached.length > 0) setMessages(cached);
+
+    // Fetch fresh data from backend in background
     try {
       const serverMsgs = await apiFetchMessages(id);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const mapped: Message[] = serverMsgs.map((m: any) => ({
-        id: m.id,
-        chatRoomId: m.chatRoomId ?? id,
-        senderId: m.senderId ?? m.sender?.id ?? '',
-        text: m.text,
-        type: m.type ?? 'text',
-        fileUri: m.fileUri,
-        fileName: m.fileName,
-        createdAt: typeof m.createdAt === 'string' ? m.createdAt : new Date(m.createdAt).toISOString(),
-      }));
+      const mapped = mapServerMessages(serverMsgs);
       setMessages(mapped);
-
-      // Cache locally
-      for (const msg of mapped) {
-        await saveMessage(msg);
-      }
     } catch {
-      // Fallback to local messages
-      const data = await getMessages(id);
-      setMessages(data);
+      // Network failed, keep showing cached
     }
-  }, [id]);
+  }, [id, mapServerMessages]);
 
   useEffect(() => {
     loadMessages();
@@ -92,10 +94,23 @@ export default function ChatRoomScreen() {
     const unsubscribe = onNewMessage((message: Message) => {
       if (message.chatRoomId === id) {
         setMessages((prev) => {
-          // Avoid duplicates
+          // Check exact ID match
           if (prev.some((m) => m.id === message.id)) return prev;
+          // Check if this is our own message echoed back (optimistic update already added it)
+          const optimisticIdx = prev.findIndex((m) =>
+            m.senderId === message.senderId &&
+            m.text === message.text &&
+            m.id.startsWith('msg-')
+          );
+          if (optimisticIdx >= 0) {
+            // Replace optimistic message with server version
+            const updated = [...prev];
+            updated[optimisticIdx] = message;
+            return updated;
+          }
           return [...prev, message];
         });
+        saveMessage(message);
         setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
       }
     });
@@ -108,7 +123,8 @@ export default function ChatRoomScreen() {
 
   const handleSend = async () => {
     const text = inputText.trim();
-    if (!text || !id) return;
+    if (!text || !id || sendingRef.current) return;
+    sendingRef.current = true;
 
     const newMessage: Message = {
       id: `msg-${Date.now()}`,
@@ -124,17 +140,17 @@ export default function ChatRoomScreen() {
     setMessages((prev) => [...prev, newMessage]);
     await saveMessage(newMessage);
 
-    // Save to backend via REST API (persistence)
+    // Save to backend via REST API — server broadcasts via socket automatically
     try {
       const saved = await apiSendMessage(id, { text, type: 'text' });
       // Update local message with server-assigned ID
       setMessages((prev) => prev.map((m) => m.id === newMessage.id ? { ...m, id: saved.id } : m));
     } catch (e) {
       console.log('[Chat] API send failed, falling back to socket:', e);
+      socketSend(newMessage);
+    } finally {
+      sendingRef.current = false;
     }
-
-    // Send via socket for real-time broadcast
-    socketSend(newMessage);
 
     setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
   };
@@ -218,15 +234,15 @@ export default function ChatRoomScreen() {
     setMessages((prev) => [...prev, msg]);
     await saveMessage(msg);
 
-    // Save to backend via REST API (persistence)
+    // Save to backend via REST API — server broadcasts via socket automatically
     try {
       const saved = await apiSendMessage(id, { text: msg.text, type, fileUri: uri, fileName: name });
       setMessages((prev) => prev.map((m) => m.id === msg.id ? { ...m, id: saved.id } : m));
     } catch (e) {
       console.log('[Chat] API attachment send failed:', e);
+      socketSend(msg);
     }
 
-    socketSend(msg);
     setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
   };
 
@@ -238,7 +254,7 @@ export default function ChatRoomScreen() {
     >
       {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border, paddingTop: insets.top }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <TouchableOpacity testID="chat-back-btn" accessibilityLabel="chat-back-btn" onPress={() => router.back()} style={styles.backButton}>
           <MaterialIcons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <ThemedText style={styles.headerTitle} numberOfLines={1}>
@@ -280,7 +296,7 @@ export default function ChatRoomScreen() {
 
       {/* Input */}
       <View style={[styles.inputContainer, { backgroundColor: colors.background, borderTopColor: colors.border, paddingBottom: insets.bottom || Spacing.sm }]}>
-        <TouchableOpacity onPress={handleAttachment} style={styles.attachButton}>
+        <TouchableOpacity testID="chat-attach-btn" accessibilityLabel="chat-attach-btn" onPress={handleAttachment} style={styles.attachButton}>
           <MaterialIcons name="add-circle-outline" size={26} color={colors.primary} />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => setShowEmoji(!showEmoji)} style={styles.emojiButton}>
@@ -288,6 +304,8 @@ export default function ChatRoomScreen() {
         </TouchableOpacity>
         <View style={[styles.inputWrapper, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}>
           <TextInput
+            testID="chat-message-input"
+            accessibilityLabel="chat-message-input"
             style={[styles.input, { color: colors.text }]}
             value={inputText}
             onChangeText={setInputText}
@@ -299,6 +317,8 @@ export default function ChatRoomScreen() {
           />
         </View>
         <TouchableOpacity
+          testID="chat-send-btn"
+          accessibilityLabel="chat-send-btn"
           onPress={handleSend}
           style={[styles.sendButton, { backgroundColor: inputText.trim() ? colors.primary : colors.border }]}
           disabled={!inputText.trim()}

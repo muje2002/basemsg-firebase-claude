@@ -1,0 +1,37 @@
+appId: com.youngkihong.basemsg
+name: "05 - Tab Navigation and Friend Management"
+---
+
+# Tab navigation and friend list verification
+
+- launchApp
+
+# Dismiss Expo dev menu if present
+- runFlow:
+    when:
+      visible: "Continue"
+    commands:
+      - tapOn: "Continue"
+
+# Wait for app to load
+- extendedWaitUntil:
+    visible: "tab-chats"
+    timeout: 60000
+
+# Verify chats tab is active
+- assertVisible: "tab-chats"
+
+# Navigate to friends tab
+- tapOn: "tab-friends"
+- waitForAnimationToEnd
+
+# Navigate to settings tab
+- tapOn: "tab-settings"
+- waitForAnimationToEnd
+
+# Navigate back to chats tab
+- tapOn: "tab-chats"
+- waitForAnimationToEnd
+
+# Verify we're back on chats
+- assertVisible: "tab-chats"

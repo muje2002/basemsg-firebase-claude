@@ -21,8 +21,9 @@ export default function LoginScreen() {
   const [isSignUpMode, setIsSignUpMode] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Verification state
+  // Verification state (sign-up email verification OR sign-in second factor)
   const [pendingVerification, setPendingVerification] = useState(false);
+  const [pendingSignInVerification, setPendingSignInVerification] = useState(false);
   const [code, setCode] = useState('');
 
   const { signIn, setActive: setSignInActive } = useSignIn();
@@ -35,11 +36,27 @@ export default function LoginScreen() {
     if (!signIn) return;
     setLoading(true);
     try {
-      const result = await signIn.create({
+      let result = await signIn.create({
         identifier: email.trim(),
         password,
       });
       console.log('[Login] SignIn result status:', result.status, JSON.stringify(result));
+
+      // Handle additional verification steps
+      if (result.status === 'needs_first_factor') {
+        result = await signIn.attemptFirstFactor({
+          strategy: 'password',
+          password,
+        });
+      }
+
+      if (result.status === 'needs_second_factor') {
+        // New device detected — Clerk requires email code verification
+        await signIn.prepareSecondFactor({ strategy: 'email_code' });
+        setPendingSignInVerification(true);
+        return;
+      }
+
       if (result.status === 'complete') {
         await setSignInActive({ session: result.createdSessionId });
       } else {
@@ -84,7 +101,6 @@ export default function LoginScreen() {
       const result = await signUp.attemptEmailAddressVerification({ code });
       if (result.status === 'complete') {
         await setSignUpActive({ session: result.createdSessionId });
-        // _layout.tsx will handle navigation after sync
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '인증에 실패했습니다.';
@@ -93,6 +109,66 @@ export default function LoginScreen() {
       setLoading(false);
     }
   }, [signUp, code, setSignUpActive]);
+
+  const handleSignInVerify = useCallback(async () => {
+    if (!signIn) return;
+    setLoading(true);
+    try {
+      const result = await signIn.attemptSecondFactor({
+        strategy: 'email_code',
+        code,
+      });
+      if (result.status === 'complete') {
+        await setSignInActive({ session: result.createdSessionId });
+      } else {
+        Alert.alert('인증 오류', `예상치 못한 상태: ${result.status}`);
+      }
+    } catch (err: unknown) {
+      const clerkErr = err as { errors?: { message: string }[] };
+      const message = clerkErr?.errors?.[0]?.message
+        ?? (err instanceof Error ? err.message : '인증에 실패했습니다.');
+      Alert.alert('인증 오류', message);
+    } finally {
+      setLoading(false);
+    }
+  }, [signIn, code, setSignInActive]);
+
+  if (pendingSignInVerification) {
+    return (
+      <KeyboardAvoidingView
+        style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <View style={styles.content}>
+          <ThemedText style={[styles.title, { color: colors.primary }]}>기기 인증</ThemedText>
+          <ThemedText style={[styles.subtitle, { color: colors.textSecondary }]}>
+            새 기기에서의 로그인입니다.{'\n'}이메일로 전송된 인증 코드를 입력하세요
+          </ThemedText>
+          <View style={styles.form}>
+            <TextInput
+              style={[styles.input, { backgroundColor: colors.inputBackground, borderColor: colors.border, color: colors.text }]}
+              value={code}
+              onChangeText={setCode}
+              placeholder="인증 코드"
+              placeholderTextColor={colors.textSecondary}
+              keyboardType="number-pad"
+            />
+            <TouchableOpacity
+              testID="login-verify-btn"
+              accessibilityLabel="login-verify-btn"
+              style={[styles.button, { backgroundColor: loading ? colors.border : colors.primary }]}
+              onPress={handleSignInVerify}
+              disabled={loading}
+            >
+              <ThemedText style={styles.buttonText}>
+                {loading ? '확인 중...' : '인증 완료'}
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    );
+  }
 
   if (pendingVerification) {
     return (
@@ -159,6 +235,8 @@ export default function LoginScreen() {
             secureTextEntry
           />
           <TouchableOpacity
+            testID="login-submit-btn"
+            accessibilityLabel="login-submit-btn"
             style={[styles.button, { backgroundColor: loading ? colors.border : colors.primary }]}
             onPress={isSignUpMode ? handleSignUp : handleSignIn}
             disabled={loading}
@@ -169,6 +247,8 @@ export default function LoginScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
+            testID="login-switch-btn"
+            accessibilityLabel="login-switch-btn"
             style={styles.switchButton}
             onPress={() => setIsSignUpMode(!isSignUpMode)}
           >

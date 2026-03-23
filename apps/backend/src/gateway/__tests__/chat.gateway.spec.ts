@@ -15,6 +15,7 @@ describe('ChatGateway', () => {
     handshake: { auth: { userId } },
     join: jest.fn(),
     leave: jest.fn(),
+    to: jest.fn().mockReturnValue({ emit: jest.fn() }),
   });
 
   beforeEach(async () => {
@@ -67,16 +68,12 @@ describe('ChatGateway', () => {
   });
 
   describe('handleMessage', () => {
-    it('should create and broadcast message', async () => {
+    it('should broadcast message to room except sender', () => {
       const socket = mockSocket('sock-1', 'user-1');
       const payload = { chatRoomId: 'room-1', senderId: 'user-1', text: '안녕!' };
-      const savedMsg = { id: 'm1', ...payload, type: 'text', createdAt: new Date() };
 
-      messagesService.create.mockResolvedValue(savedMsg);
-
-      const result = await gateway.handleMessage(socket as any, payload);
-      expect(result.text).toBe('안녕!');
-      expect((gateway as any).server.to).toHaveBeenCalledWith('room-1');
+      gateway.handleMessage(socket as any, payload);
+      expect(socket.to).toHaveBeenCalledWith('room-1');
     });
   });
 
@@ -91,13 +88,12 @@ describe('ChatGateway', () => {
 
   // ── 3. Corner cases ──
   describe('handleMessage - corner cases', () => {
-    it('should handle emoji message', async () => {
+    it('should relay emoji message', () => {
       const socket = mockSocket('sock-1', 'user-1');
       const payload = { chatRoomId: 'room-1', senderId: 'user-1', text: '😀🎉', type: 'emoji' as const };
-      messagesService.create.mockResolvedValue({ id: 'm1', ...payload, createdAt: new Date() });
 
-      const result = await gateway.handleMessage(socket as any, payload);
-      expect(result.text).toBe('😀🎉');
+      gateway.handleMessage(socket as any, payload);
+      expect(socket.to).toHaveBeenCalledWith('room-1');
     });
   });
 
@@ -112,29 +108,25 @@ describe('ChatGateway', () => {
 
   // ── 5. Random input ──
   describe('handleMessage - random', () => {
-    it.each([1, 2, 3])('should handle random message (iteration %i)', async (i) => {
+    it.each([1, 2, 3])('should relay random message (iteration %i)', (i) => {
       const socket = mockSocket(`sock-${i}`, `user-${i}`);
       const text = `Random-${Math.random().toString(36).slice(2)}`;
       const payload = { chatRoomId: 'room-1', senderId: `user-${i}`, text };
-      messagesService.create.mockResolvedValue({ id: `m-${i}`, ...payload, type: 'text', createdAt: new Date() });
 
-      const result = await gateway.handleMessage(socket as any, payload);
-      expect(result.text).toBe(text);
+      gateway.handleMessage(socket as any, payload);
+      expect(socket.to).toHaveBeenCalledWith('room-1');
     });
   });
 
   // ── 6. Concurrency ──
   describe('handleMessage - concurrency', () => {
-    it('should handle concurrent messages', async () => {
-      const promises = Array.from({ length: 5 }, (_, i) => {
+    it('should handle concurrent messages', () => {
+      Array.from({ length: 5 }, (_, i) => {
         const socket = mockSocket(`sock-${i}`, `user-${i}`);
         const payload = { chatRoomId: 'room-1', senderId: `user-${i}`, text: `Msg-${i}` };
-        messagesService.create.mockResolvedValue({ id: `m-${i}`, ...payload, type: 'text', createdAt: new Date() });
-        return gateway.handleMessage(socket as any, payload);
+        gateway.handleMessage(socket as any, payload);
+        expect(socket.to).toHaveBeenCalledWith('room-1');
       });
-
-      const results = await Promise.all(promises);
-      expect(results).toHaveLength(5);
     });
   });
 });

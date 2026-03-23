@@ -1,0 +1,53 @@
+appId: com.youngkihong.basemsg
+name: "02 - Message Send and Persistence"
+---
+
+# Prerequisite: User must be logged in
+# Send message, leave, re-enter, verify message persists
+
+- launchApp
+
+# Dismiss Expo dev menu if present
+- runFlow:
+    when:
+      visible: "Continue"
+    commands:
+      - tapOn: "Continue"
+
+# Wait for main screen (already logged in)
+- extendedWaitUntil:
+    visible: "tab-chats"
+    timeout: 60000
+
+# Tap first chat room area
+- tapOn:
+    point: "50%,30%"
+- extendedWaitUntil:
+    visible: "chat-message-input"
+    timeout: 10000
+
+# Type and send a unique test message
+- tapOn: "chat-message-input"
+- inputText: "E2E persistence test"
+- tapOn: "chat-send-btn"
+
+# Verify message appears
+- assertVisible: "E2E persistence test"
+
+# Go back to chat list
+- tapOn: "chat-back-btn"
+
+# Wait for chat list
+- extendedWaitUntil:
+    visible: "tab-chats"
+    timeout: 10000
+
+# Re-enter the same chat room
+- tapOn:
+    point: "50%,30%"
+- extendedWaitUntil:
+    visible: "chat-message-input"
+    timeout: 10000
+
+# Verify previous message still exists
+- assertVisible: "E2E persistence test"

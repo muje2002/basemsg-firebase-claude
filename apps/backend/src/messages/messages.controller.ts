@@ -3,19 +3,26 @@ import { MessagesService } from './messages.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
 import { ClerkUser } from '../auth/clerk-user.decorator';
+import { ChatGateway } from '../gateway/chat.gateway';
 
 @Controller()
 @UseGuards(ClerkAuthGuard)
 export class MessagesController {
-  constructor(private readonly messagesService: MessagesService) {}
+  constructor(
+    private readonly messagesService: MessagesService,
+    private readonly chatGateway: ChatGateway,
+  ) {}
 
   @Post('chat-rooms/:roomId/messages')
-  create(
+  async create(
     @Param('roomId') roomId: string,
     @ClerkUser() userId: string,
     @Body() dto: CreateMessageDto,
   ) {
-    return this.messagesService.create(roomId, userId, dto);
+    const message = await this.messagesService.create(roomId, userId, dto);
+    // Broadcast to room members via socket (real-time)
+    this.chatGateway.broadcastToRoom(roomId, message);
+    return message;
   }
 
   @Get('chat-rooms/:roomId/messages')

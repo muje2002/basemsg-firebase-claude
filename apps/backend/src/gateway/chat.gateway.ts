@@ -71,24 +71,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('message:send')
-  async handleMessage(
+  handleMessage(
     @ConnectedSocket() client: Socket,
     @MessageBody() payload: SendMessagePayload,
   ) {
-    const message = await this.messagesService.create(
-      payload.chatRoomId,
-      payload.senderId,
-      {
-        text: payload.text,
-        type: payload.type,
-        fileUri: payload.fileUri,
-        fileName: payload.fileName,
-      },
-    );
+    // Relay only — DB save is handled by REST API
+    client.to(payload.chatRoomId).emit('message:receive', payload);
+  }
 
-    // Broadcast to all clients in the room (including sender)
-    this.server.to(payload.chatRoomId).emit('message:receive', message);
-
-    return message;
+  /** Broadcast a message to all clients in a room (called from REST controller) */
+  broadcastToRoom(roomId: string, message: unknown) {
+    this.server.to(roomId).emit('message:receive', message);
   }
 }

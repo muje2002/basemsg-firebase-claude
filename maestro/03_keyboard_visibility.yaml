@@ -1,0 +1,44 @@
+appId: com.youngkihong.basemsg
+name: "03 - Keyboard Does Not Hide Input"
+---
+
+# Verify input field stays visible when keyboard is shown
+
+- launchApp
+
+# Dismiss Expo dev menu if present
+- runFlow:
+    when:
+      visible: "Continue"
+    commands:
+      - tapOn: "Continue"
+
+# Wait for main screen
+- extendedWaitUntil:
+    visible: "tab-chats"
+    timeout: 60000
+
+# Tap first chat room
+- tapOn:
+    point: "50%,30%"
+- extendedWaitUntil:
+    visible: "chat-message-input"
+    timeout: 10000
+
+# Tap message input to show keyboard
+- tapOn: "chat-message-input"
+
+# Input field should still be visible with keyboard open
+- assertVisible: "chat-message-input"
+
+# Type text to verify input works
+- inputText: "keyboard test"
+
+# Send button should be visible
+- assertVisible: "chat-send-btn"
+
+# Send the message
+- tapOn: "chat-send-btn"
+
+# Input should still be visible after sending
+- assertVisible: "chat-message-input"

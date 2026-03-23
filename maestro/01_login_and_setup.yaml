@@ -1,0 +1,43 @@
+appId: com.youngkihong.basemsg
+name: "01 - Login and Phone Setup"
+env:
+  EMAIL: ${MAESTRO_EMAIL}
+  PASSWORD: ${MAESTRO_PASSWORD}
+---
+
+# Login with email/password → verify main screen
+
+- launchApp
+
+# Dismiss dev menu if present
+- runFlow:
+    when:
+      visible: "Continue"
+    commands:
+      - tapOn: "Continue"
+
+# Wait for login screen
+- extendedWaitUntil:
+    visible: "login-submit-btn"
+    timeout: 60000
+
+# Enter email
+- tapOn: "이메일"
+- inputText: "${EMAIL}"
+
+# Enter password
+- tapOn: "비밀번호"
+- inputText: "${PASSWORD}"
+
+# Tap login button
+- tapOn: "login-submit-btn"
+
+# Wait for main screen
+- extendedWaitUntil:
+    visible: "tab-chats"
+    timeout: 30000
+
+# Verify all tabs visible
+- assertVisible: "tab-chats"
+- assertVisible: "tab-friends"
+- assertVisible: "tab-settings"

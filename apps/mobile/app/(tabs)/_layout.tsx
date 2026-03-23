@@ -26,6 +26,8 @@ export default function TabLayout() {
         name="index"
         options={{
           title: '채팅',
+          tabBarTestID: 'tab-chats',
+          tabBarAccessibilityLabel: 'tab-chats',
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="chat-bubble-outline" size={size} color={color} />
           ),
@@ -35,6 +37,8 @@ export default function TabLayout() {
         name="friends"
         options={{
           title: '친구',
+          tabBarTestID: 'tab-friends',
+          tabBarAccessibilityLabel: 'tab-friends',
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="people-outline" size={size} color={color} />
           ),
@@ -44,6 +48,8 @@ export default function TabLayout() {
         name="settings"
         options={{
           title: '설정',
+          tabBarTestID: 'tab-settings',
+          tabBarAccessibilityLabel: 'tab-settings',
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="settings" size={size} color={color} />
           ),
