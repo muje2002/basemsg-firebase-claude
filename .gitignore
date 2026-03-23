@@ -38,6 +38,9 @@ config_deploy.md
 # 개발 대화 히스토리 (로컬 전용)
 dev_history.md
 
+# MCP 설정 (토큰 포함)
+.mcp.json
+
 # SQLite
 *.sqlite
 
