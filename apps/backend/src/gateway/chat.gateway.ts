@@ -8,7 +8,6 @@ import {
   MessageBody,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { MessagesService } from '../messages/messages.service';
 
 interface SendMessagePayload {
   chatRoomId: string;
@@ -27,8 +26,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   server!: Server;
 
   private userSockets = new Map<string, Set<string>>();
-
-  constructor(private readonly messagesService: MessagesService) {}
 
   handleConnection(client: Socket) {
     const userId = client.handshake.auth?.userId as string | undefined;
